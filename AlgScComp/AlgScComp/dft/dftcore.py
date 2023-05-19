@@ -13,8 +13,8 @@ _. = type of implementation
 
 """
 
-from dfthelper import *
-from dftextension import *
+from . import dfthelper as dfth
+from . import dftextension as dfte
 
 import cmath
 import math
@@ -126,7 +126,7 @@ def dft(f: list, norm: str = 'fwd') -> list:
         for k in range(0, N)
     ]
 
-    return [get_norm_fwd(N, norm)*F_i for F_i in F]
+    return [dfth.get_norm_fwd(N, norm)*F_i for F_i in F]
 
 
 def idft(F: list, norm: str = 'fwd') -> list:
@@ -170,7 +170,7 @@ def idft(F: list, norm: str = 'fwd') -> list:
         for k in range(0, N)
     ]
 
-    return [get_norm_inv*f_i for f_i in f]
+    return [dfth.get_norm_inv*f_i for f_i in f]
 
 
 def fft_rek(f: list, norm: str = 'fwd') -> list:
@@ -207,7 +207,7 @@ def fft_rek(f: list, norm: str = 'fwd') -> list:
 
     F = fft_rek_recurs(f, 0)
 
-    return [get_norm_fwd(len(F),norm) * F_i for F_i in F]
+    return [dfth.get_norm_fwd(len(F),norm) * F_i for F_i in F]
 
 
 def ifft_rek(F: list, norm: str = 'fwd') -> list:
@@ -244,17 +244,17 @@ def ifft_rek(F: list, norm: str = 'fwd') -> list:
 
     f = fft_rek_recurs(F,1)
 
-    return [get_norm_inv(len(f),norm) * f_i for f_i in f]
+    return [dfth.get_norm_inv(len(f),norm) * f_i for f_i in f]
 
 
 def fft_itt_v1(f, norm: str = 'fwd') -> list:
-    F = butterfly_v1(fftshift(f), 0)
-    return [get_norm_fwd(len(F),norm)*F_i for F_i in F]
+    F = butterfly_v1(dfte.fftshift(f), 0)
+    return [dfth.get_norm_fwd(len(F),norm)*F_i for F_i in F]
 
 
 def ifft_itt_v1(F, norm: str = 'fwd') -> list:
-    f = butterfly_v1(fftshift(F), 1)
-    return [get_norm_inv(len(F),norm)*F_i for F_i in F]
+    f = butterfly_v1(dfte.fftshift(F), 1)
+    return [dfth.get_norm_inv(len(F),norm)*F_i for F_i in F]
 
 
 f = [1, 2, 3, 4, 5, 6, 7, 8]
