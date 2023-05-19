@@ -255,17 +255,3 @@ def fft_itt_v1(f, norm: str = 'fwd') -> list:
 def ifft_itt_v1(F, norm: str = 'fwd') -> list:
     f = butterfly_v1(dfte.fftshift(F), 1)
     return [dfth.get_norm_inv(len(F),norm)*F_i for F_i in F]
-
-
-f = [1, 2, 3, 4, 5, 6, 7, 8]
-print(fft_rek(f))
-print('---------')
-print(f)
-print('---------')
-print(dft(f))
-print('---------')
-print(f)
-print('---------')
-print(fft_itt_v1(f))
-print('---------')
-print(f)
