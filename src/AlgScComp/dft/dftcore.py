@@ -205,9 +205,9 @@ def fft_rek(f: list, norm: str = 'fwd') -> list:
             "Invalid input list size. Input list size is expected to have len 2**n and > 0"
         )
 
-    x = fft_rek_recurs(f, 0)
+    F = fft_rek_recurs(f, 0)
 
-    return [get_norm_fwd(len(x),norm) * x_i for x_i in x]
+    return [get_norm_fwd(len(F),norm) * F_i for F_i in F]
 
 
 def ifft_rek(F: list, norm: str = 'fwd') -> list:
@@ -242,18 +242,30 @@ def ifft_rek(F: list, norm: str = 'fwd') -> list:
             "Invalid input list size. Input list size is expected to have len 2**n and > 0"
         )
 
-    x = fft_rek_recurs(F,1)
+    f = fft_rek_recurs(F,1)
 
-    return [get_norm_inv(len(x),norm) * x_i for x_i in x]
-
-
-def fft_itt_v1(X):
-    return butterfly_v1(fftshift(X), 0)
+    return [get_norm_inv(len(f),norm) * f_i for f_i in f]
 
 
-def ifft_itt_v1(X):
-    return 1 / len(X) * butterfly_v1(fftshift(X), 1)
+def fft_itt_v1(f, norm: str = 'fwd') -> list:
+    F = butterfly_v1(fftshift(f), 0)
+    return [get_norm_fwd(len(F),norm)*F_i for F_i in F]
 
 
-print(fft_rek([1, 2, 3, 4, 5, 6, 7, 8]))
-print(dft([1, 2, 3, 4, 5, 6, 7, 8]))
+def ifft_itt_v1(F, norm: str = 'fwd') -> list:
+    f = butterfly_v1(fftshift(F), 1)
+    return [get_norm_inv(len(F),norm)*F_i for F_i in F]
+
+
+f = [1, 2, 3, 4, 5, 6, 7, 8]
+print(fft_rek(f))
+print('---------')
+print(f)
+print('---------')
+print(dft(f))
+print('---------')
+print(f)
+print('---------')
+print(fft_itt_v1(f))
+print('---------')
+print(f)

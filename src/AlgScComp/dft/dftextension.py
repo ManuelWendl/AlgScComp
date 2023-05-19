@@ -57,16 +57,17 @@ def fftshift(X:list) -> list:
         If the input 
 
     '''
+    x = X.copy()
 
-    if (math.log(len(X),2)%1 != 0 or len(X)<1): raise ValueError('Invalid input list size. Input list size is expected to have len 2**n')
+    if (math.log(len(x),2)%1 != 0 or len(x)<1): raise ValueError('Invalid input list size. Input list size is expected to have len 2**n')
 
-    p = int(math.log(len(X),2)) 
+    p = int(math.log(len(x),2)) 
 
-    for n in range(0,len(X)):
+    for n in range(0,len(x)):
         j = 0; m = n
         for i in range(0,p):
             j = int(2*j + m%2); m = int(m/2)
         if (j>n):
-            h = X[j]; X[j] = X[n]; X[n] = h
+            h = x[j]; x[j] = x[n]; x[n] = h
     
-    return X
+    return x
