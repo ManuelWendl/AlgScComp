@@ -5,6 +5,7 @@ Helper functions of the Discrete Fourier Transform module
 
 
 import math
+import cmath
 
 def get_norm_fwd(N: int, norm: str = 'fwd') -> float:
     '''
@@ -75,3 +76,8 @@ def get_norm_inv(N: int, norm: str = 'fwd') -> float:
     elif norm == 'unity':
         return 1.0/math.sqrt(N)
     raise ValueError('Invalid string identifier for norm {norm}. norm is required to be (1.) fwd, (2.) inv or (3.) unitary')
+
+
+def omega(j: int,L: int,inverse: bool) -> complex:
+    b = 1 if inverse else -1
+    return cmath.exp(b * 1j * 2 * cmath.pi * j / L)
