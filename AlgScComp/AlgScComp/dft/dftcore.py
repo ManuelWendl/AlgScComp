@@ -16,8 +16,17 @@ ifft(F)
 from . import dfthelper as dfth
 from . import dftextension as dfte
 
-import cmath
 import math
+import struct
+
+import os 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+import ctypes as ct
+
+dftc = ct.CDLL(dir_path+'/dftc.so')
+dftc.connect()
+
 
 '''
 Numpy is only imported for vecorised impelemntation
@@ -271,7 +280,7 @@ def dft(f: list, norm: str = 'fwd') -> list:
         for k in range(0, N)
     ]
 
-    return [dfth.get_norm_fwd(N, norm)*F_i for F_i in F]
+    return [dfth.cround(dfth.get_norm_fwd(N, norm)*F_i,7) for F_i in F]
 
 
 def idft(F: list, norm: str = 'fwd') -> list:
@@ -315,10 +324,10 @@ def idft(F: list, norm: str = 'fwd') -> list:
         for k in range(0, N)
     ]
 
-    return [dfth.get_norm_inv(N,norm)*f_i for f_i in f]
+    return [dfth.cround(dfth.get_norm_inv(N,norm)*f_i,7) for f_i in f]
 
 
-def fft(f: list, norm: str = 'fwd', vers: str = 'vec') -> list:
+def fft(f: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list:
     """
     Computation of the 1D Fast Fourier Transform.
 
@@ -370,9 +379,50 @@ def fft(f: list, norm: str = 'fwd', vers: str = 'vec') -> list:
     inverse = False
 
     if  vers == 'v1':
-        F = butterfly_v1(dfte.fftshift(f), inverse)
+        if lang == 'c':
+            class ComplexC(ct.Structure):
+                _fields_ = [("real", ct.POINTER(ct.c_float)),
+                ("imag",ct.POINTER(ct.c_float))]
+
+            f_real, f_imag = dfth.splitComplex(dfte.fftshift(f))
+
+            freal = ((ct.c_float) * len(f))(*f_real)
+            fimag = ((ct.c_float) * len(f))(*f_imag)
+
+            dftc.butterfly_v1.restype = ct.POINTER(ComplexC)
+
+            Fp = dftc.butterfly_v1(ComplexC(freal,fimag), ct.c_bool(inverse), ct.c_int(len(f)))
+            
+            F = [Fp.contents.real[i] + 1J * Fp.contents.imag[i] for i in range (0,len(f))]
+
+            dftc.freeMemory(Fp)
+
+        elif lang == 'py':
+            F = butterfly_v1(dfte.fftshift(f), inverse)
+        else:
+            raise ValueError('Invalid string identifier for lang {lang}. lang is required to be (1.) c, (2.) py')
+
     elif vers == 'vec':
-        F = butterfly_vec(dfte.fftshift(f), inverse)   
+        if lang == 'c':
+            class ComplexC(ct.Structure):
+                _fields_ = [("real", ct.POINTER(ct.c_float)),
+                ("imag",ct.POINTER(ct.c_float))]
+
+            f_real, f_imag = dfth.splitComplex(dfte.fftshift(f))
+
+            freal = ((ct.c_float) * len(f))(*f_real)
+            fimag = ((ct.c_float) * len(f))(*f_imag)
+
+            dftc.butterfly_vec.restype = ct.POINTER(ComplexC)
+
+            Fp = dftc.butterfly_vec(ComplexC(freal,fimag), ct.c_bool(inverse), ct.c_int(len(f)))
+
+            F = [Fp.contents.real[i] + 1J * Fp.contents.imag[i] for i in range (0,len(f))]
+
+            dftc.freeMemory(Fp)
+
+        elif lang == 'py':
+            F = butterfly_vec(dfte.fftshift(f), inverse)   
     elif vers == 'v2':
         F = butterfly_v2(dfte.fftshift(f), inverse)
     elif vers == 'rec':
@@ -380,7 +430,7 @@ def fft(f: list, norm: str = 'fwd', vers: str = 'vec') -> list:
     else:
         raise ValueError('Invalid string identifier for vers {vers}. vers is required to be (1.) v1, (2.) vec, (3.) v2 or (4.) rec')
 
-    return [dfth.get_norm_fwd(len(F),norm) * F_i for F_i in F]
+    return [dfth.cround(dfth.get_norm_fwd(len(F),norm) * F_i,7) for F_i in F]
 
 
 def ifft(F: list, norm: str = 'fwd', vers: str = 'vec') -> list:
@@ -445,6 +495,5 @@ def ifft(F: list, norm: str = 'fwd', vers: str = 'vec') -> list:
     else:
         raise ValueError('Invalid string identifier for vers {vers}. vers is required to be (1.) v1, (2.) vec, (3.) v2 or (4.) rec')
 
-    return [dfth.get_norm_inv(len(f),norm) * f_i for f_i in f]
-
+    return [dfth.cround(dfth.get_norm_inv(len(f),norm) * f_i,7) for f_i in f]
 

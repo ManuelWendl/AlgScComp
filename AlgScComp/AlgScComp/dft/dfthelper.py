@@ -6,6 +6,8 @@ Helper functions of the Discrete Fourier Transform module
 
 import math
 import cmath
+import ctypes as ct
+from typing import Any
 
 def get_norm_fwd(N: int, norm: str = 'fwd') -> float:
     '''
@@ -81,3 +83,12 @@ def get_norm_inv(N: int, norm: str = 'fwd') -> float:
 def omega(j: int,L: int,inverse: bool) -> complex:
     b = 1 if inverse else -1
     return cmath.exp(b * 1j * 2 * cmath.pi * j / L)
+
+def cround(z : complex, n: int) -> complex:
+    return round(z.real,n) + 1J * round(z.imag,n)
+
+def splitComplex(c: list):
+    c_real = [c_i.real for c_i in c]
+    c_imag = [c_i.imag for c_i in c]
+    return c_real, c_imag
+
