@@ -6,8 +6,7 @@ Helper functions of the Discrete Fourier Transform module
 
 import math
 import cmath
-import ctypes as ct
-from typing import Any
+import copy
 
 def get_norm_fwd(N: int, norm: str = 'fwd') -> float:
     '''
@@ -92,3 +91,39 @@ def splitComplex(c: list):
     c_imag = [c_i.imag for c_i in c]
     return c_real, c_imag
 
+def checkDimensions(x: list) -> list:
+    dim1 = len(x);
+    dim2 = list();
+    dim2bool = 0; # 1 one dim, 2 tow dim
+
+    for xi in x:
+        if type(xi) == float:
+            dim2.append(0)
+            if dim2bool == 2:
+                raise ValueError("List has inconsistent sizes in second dimension.")
+            dim2bool = 1
+        elif type(xi) == list:
+            for xij in xi:
+                if type(xij) == list:
+                    raise ValueError("List has more than two dimension")
+            dim2.append(len(xi))
+            if dim2bool == 1:
+                raise ValueError("List has inconsistent sizes in second dimension.")
+            dim2bool = 2
+    
+    if len(dim2) == 0:
+        dim1 = 1
+        dim2 = len(x)
+    else:
+        for dim2i in dim2:
+            if dim2i != dim2[0]:
+                raise ValueError("List has inconsistent sizes in second dimension.")
+        dim2 = dim2[0]
+
+    return [dim1, dim2]
+
+def conj(z: complex)->complex:
+    return z.conjugate()
+
+def conjarr(l: list)->list:
+    return [fi.conjugate() for fi in l]
