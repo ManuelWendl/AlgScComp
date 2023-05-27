@@ -97,7 +97,7 @@ def checkDimensions(x: list) -> list:
     dim2bool = 0; # 1 one dim, 2 tow dim
 
     for xi in x:
-        if type(xi) == float:
+        if type(xi) != list:
             dim2.append(0)
             if dim2bool == 2:
                 raise ValueError("List has inconsistent sizes in second dimension.")
@@ -111,7 +111,7 @@ def checkDimensions(x: list) -> list:
                 raise ValueError("List has inconsistent sizes in second dimension.")
             dim2bool = 2
     
-    if len(dim2) == 0:
+    if sum(dim2) == 0:
         dim1 = 1
         dim2 = len(x)
     else:

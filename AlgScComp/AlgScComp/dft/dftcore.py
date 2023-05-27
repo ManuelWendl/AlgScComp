@@ -4,11 +4,17 @@ Discrete Fourier Transform Core
 
 This module contains the following algorithms:
 
-dft(f) 
-idft(F)
-fft(f)
-ifft(F)
-rfft(f)
+dft(f) - Discrete Fourier Transform
+idft(F) - Inverse Disceret Fourier Transform
+fft(f) - Fast Fourier Transform 
+ifft(F) - Ineverse Fast Fourier Transform
+rfft(f) - Real Fast Fourier Transform
+fct(f) - Discrete Cosine Transform (FFT implementation)
+ifct(F) - Inverse Discrete Cosine Transform (FFT Implementation)
+qwfct(f) - Quater Wave Discrete Cosine Transform (FFT implementation)
+iqwfct(F) - Inverse Quater Wave Discrete Cosine Transform (FFT implementation) 
+fst(f) - Disceret Sine Transform (FFT implementation)
+ifst(F) - Inverse Disceret Sine Transform (FFT implementation)
 
 - dft and idft are simple implementations in form of a matrix vector multiplication of runtime O(N^2)
 - fft and ifft are divide and conquere alegorithms with different types of implemenatations.
@@ -38,7 +44,7 @@ Numpy is based on C and using SIMD.
 import numpy as np
 
 
-__all__ = ["dft", "idft", "fft", "ifft", "rfft"]
+__all__ = ["dft", "idft", "fft", "ifft", "rfft", "fct", "ifct", "qwfct", "iqwfct", "fst", "ifst"]
 
 '''
 Helper Functions:
@@ -398,6 +404,13 @@ def fft(f: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list:
 
     if  vers == 'v1':
         if lang == 'c':
+            
+            N = len(f)
+            if math.log(N, 2) % 1 != 0 or N < 1:
+                raise ValueError(
+                "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+                )
+
             class ComplexC(ct.Structure):
                 _fields_ = [("real", ct.POINTER(ct.c_float)),
                 ("imag",ct.POINTER(ct.c_float))]
@@ -426,6 +439,13 @@ def fft(f: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list:
 
     elif vers == 'vec':
         if lang == 'c':
+
+            N = len(f)
+            if math.log(N, 2) % 1 != 0 or N < 1:
+                raise ValueError(
+                "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+                )
+
             class ComplexC(ct.Structure):
                 _fields_ = [("real", ct.POINTER(ct.c_float)),
                 ("imag",ct.POINTER(ct.c_float))]
@@ -452,6 +472,13 @@ def fft(f: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list:
          
     elif vers == 'v2':
         if lang == 'c':
+
+            N = len(f)
+            if math.log(N, 2) % 1 != 0 or N < 1:
+                raise ValueError(
+                "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+                )
+            
             class ComplexC(ct.Structure):
                 _fields_ = [("real", ct.POINTER(ct.c_float)),
                 ("imag",ct.POINTER(ct.c_float))]
@@ -553,6 +580,13 @@ def ifft(F: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list
 
     if  vers == 'v1':
         if lang == 'c':
+
+            N = len(F)
+            if math.log(N, 2) % 1 != 0 or N < 1:
+                raise ValueError(
+                "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+                )
+            
             class ComplexC(ct.Structure):
                 _fields_ = [("real", ct.POINTER(ct.c_float)),
                 ("imag",ct.POINTER(ct.c_float))]
@@ -578,6 +612,13 @@ def ifft(F: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list
 
     elif vers == 'vec':
         if lang == 'c':
+
+            N = len(F)
+            if math.log(N, 2) % 1 != 0 or N < 1:
+                raise ValueError(
+                "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+                )
+            
             class ComplexC(ct.Structure):
                 _fields_ = [("real", ct.POINTER(ct.c_float)),
                 ("imag",ct.POINTER(ct.c_float))]
@@ -603,6 +644,13 @@ def ifft(F: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list
          
     elif vers == 'v2':
         if lang == 'c':
+
+            N = len(F)
+            if math.log(N, 2) % 1 != 0 or N < 1:
+                raise ValueError(
+                "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+                )
+            
             class ComplexC(ct.Structure):
                 _fields_ = [("real", ct.POINTER(ct.c_float)),
                 ("imag",ct.POINTER(ct.c_float))]
@@ -678,6 +726,12 @@ def rfft(f: list, norm: str = 'fwd',lang: str = 'c') -> list:
     """
     dims = dfth.checkDimensions(f)
 
+    N = len(f)
+    if math.log(N, 2) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+        )
+
     fac = 1/2
 
     if norm == 'fwd':
@@ -703,12 +757,12 @@ def rfft(f: list, norm: str = 'fwd',lang: str = 'c') -> list:
         F = [None] * N
 
         for k in n:
-            F[k] = fac*Z[k]*(1-1J*dfth.omega(k,N,False)) + fac*dfth.conj(Z[-k])*(1+1J*dfth.omega(k,N,False))
+            F[k] = dfth.cround(fac*Z[k]*(1-1J*dfth.omega(k,N,False)) + fac*dfth.conj(Z[-k])*(1+1J*dfth.omega(k,N,False)),7)
         
         n = range(int(-N/2+1),1)
 
         for k in n:
-            F[int(N/2)-k] = dfth.conj(fac*Z[k]*(1+1J*dfth.omega(k,N,False)) + fac*dfth.conj(Z[-k])*(1-1J*dfth.omega(k,N,False)))                                   
+            F[int(N/2)-k] = dfth.cround(dfth.conj(fac*Z[k]*(1+1J*dfth.omega(k,N,False)) + fac*dfth.conj(Z[-k])*(1-1J*dfth.omega(k,N,False))),7)                                   
 
         return F
 
@@ -724,10 +778,348 @@ def rfft(f: list, norm: str = 'fwd',lang: str = 'c') -> list:
         G1 = [Z[i]+dfth.conj(Z[-i]) for i in range(0,len(Z))]
         H1 = [Z[i]-dfth.conj(Z[-i]) for i in range(0,len(Z))]
 
-        G = [G1i * fac  for G1i in G1]
-        H = [H1i * -fac*1J for H1i in H1]
+        G = [dfth.cround(G1i * fac,7)  for G1i in G1]
+        H = [dfth.cround(H1i * -fac*1J) for H1i in H1]
 
         return [G,H]
 
 
     raise ValueError("Input size of list shall not exceed 3 in first dimension. Only size (1,..) or (2,..) accepted.")
+
+def fct(f: list, norm: str = 'fwd', lang: str = 'c'):
+    """
+    Computation of the 1D Fast Cosine Transform of purely real data.
+    =================================================================
+
+    computation of the DCT, using the fft algorithm, for efficient computation.
+    The input list is expanded according to the symmetry. 
+
+    Parameters
+    ----------
+    f: list
+        Input must be real. size of f is required to be 2**n+1.
+    norm: str
+        String identifier of the norm type. 
+        Possible options are (1.) 'fwd', (2.) 'inv'.
+        Default value is given (1.) 'fwd'
+    lang: str
+        String identifier if the language specification.
+        Possible options are (1.) 'c', (2.) 'py'.
+        Default value is given (1.) 'c' (except for recursive).
+        'c' implementation is faster than the python implementation. 
+
+    Returns
+    -------
+    F: Real list
+        Real DCT coefficients.
+
+    Raises
+    ------
+    IndexError:
+        If the input list has a different size than 2**n+1 or is empty.
+    ValueError:
+        If the norm string identifier is unknown.
+    ValueError:
+        If the lang string identifier is unknown.
+    """
+
+    N = len(f)
+    if math.log(N-1, 2) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+        )
+    
+    g = f+f[-2:0:-1]
+    F = rfft(g,norm=norm, lang=lang)
+
+    fac = 1
+
+    if norm == 'fwd':
+        fac = 1
+    elif norm == 'inv':
+        fac = 1/2
+    else:   
+        raise ValueError('Invalid string identifier for norm {norm}. norm is required to be (1.) fwd, (2.) inv. unitary is not available for the fct algorithm.')
+    return [dfth.cround(fac * F[i]) for i in range(0, len(f))]
+
+
+def ifct(F: list, norm: str = 'fwd', lang: str = 'c'):
+    """
+    Computation of the inverse 1D Fast Cosine Transform of purely real data.
+    =================================================================
+
+    computation of the DCT, using the fft algorithm, for efficient computation.
+    The input list is expanded according to the symmetry. 
+
+    Parameters
+    ----------
+    F: list
+        Input can be complex. size of f is required to be 2**n+1.
+    norm: str
+        String identifier of the norm type. 
+        Possible options are (1.) 'fwd', (2.) 'inv'.
+        Default value is given (1.) 'fwd'
+    lang: str
+        String identifier if the language specification.
+        Possible options are (1.) 'c', (2.) 'py'.
+        Default value is given (1.) 'c' (except for recursive).
+        'c' implementation is faster than the python implementation. 
+
+    Returns
+    -------
+    f: Complex list
+         Data points of in verse DCT transformation
+
+    Raises
+    ------
+    IndexError:
+        If the input list has a different size than 2**n+1 or is empty.
+    ValueError:
+        If the norm string identifier is unknown.
+    ValueError:
+        If the lang string identifier is unknown.
+    """
+    N = len(F)
+    if math.log(N-1, 2) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+        )
+    
+    if norm == 'fwd':
+        fac = 1
+    elif norm == 'inv':
+        fac = 2
+    else:   
+        raise ValueError('Invalid string identifier for norm {norm}. norm is required to be (1.) fwd, (2.) inv. unitary is not available for the fct algorithm.')
+
+    G = F + F[-2:0:-1]
+    f = ifft(G,norm=norm,lang=lang)
+
+    return [dfth.cround(fac * f[i]) for i in range(0, len(F))]
+
+
+def qwfct(f: list, norm: str = 'fwd', lang: str = 'c'):
+    """
+    Computation of the 1D Quater Wave Fast Cosine Transform of purely real data.
+    =================================================================
+
+    computation of the quater wave DCT, using the fft algorithm, for efficient computation.
+    The input list is expanded according to the symmetry. 
+
+    Parameters
+    ----------
+    f: list
+        must be real. The size of f is required to be 2**n.
+    norm: str
+        String identifier of the norm type. 
+        Possible options are (1.) 'fwd', (2.) 'inv'.
+        Default value is given (1.) 'fwd'
+    lang: str
+        String identifier if the language specification.
+        Possible options are (1.) 'c', (2.) 'py'.
+        Default value is given (1.) 'c' (except for recursive).
+        'c' implementation is faster than the python implementation. 
+
+    Returns
+    -------
+    F: Real list
+        Real quater wave DCT coefficients.
+
+    Raises
+    ------
+    IndexError:
+        If the input list has a different size than 2**n or is empty.
+    ValueError:
+        If the norm string identifier is unknown.
+    ValueError:
+        If the lang string identifier is unknown.
+    """
+    N = len(f)
+    if math.log(N, 2) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+        )
+    
+    if norm == 'fwd':
+        fac = 1
+    elif norm == 'inv':
+        fac = N
+    else:   
+        raise ValueError('Invalid string identifier for norm {norm}. norm is required to be (1.) fwd, (2.) inv. unitary is not available for the fct algorithm.')
+
+    g = f + list(reversed(f))
+    G = rfft(g,norm=norm,lang=lang)
+
+    print([fac*dfth.cround(G[i]*dfth.omega(i,4*N,False),7) for i in range(0,2*N)])
+    return [fac*dfth.cround(G[i]*dfth.omega(i,4*N,False),7) for i in range(0,N)]
+
+
+    
+def iqwfct(F: list, norm: str = 'fwd', lang: str = 'c'):
+    """
+    Computation of the inverse 1D Quater Wave Fast Cosine Transform of purely real data.
+    =================================================================
+
+    computation of the quater wave DCT, using the fft algorithm, for efficient computation.
+    The input list is expanded according to the symmetry. 
+
+    Parameters
+    ----------
+    F: list
+        Quater Wave DCT coeffcients
+        Input can be complex. Size of f is required to be 2**n.
+    norm: str
+        String identifier of the norm type. 
+        Possible options are (1.) 'fwd', (2.) 'inv'.
+        Default value is given (1.) 'fwd'
+    lang: str
+        String identifier if the language specification.
+        Possible options are (1.) 'c', (2.) 'py'.
+        Default value is given (1.) 'c' (except for recursive).
+        'c' implementation is faster than the python implementation. 
+
+    Returns
+    -------
+    f: list
+        Data points of QW DCT coefficients.
+
+    Raises
+    ------
+    IndexError:
+        If the input list has a different size than 2**n or is empty.
+    ValueError:
+        If the norm string identifier is unknown.
+    ValueError:
+        If the lang string identifier is unknown.
+    """
+    N = len(F)
+    if math.log(N, 2) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+        )
+    
+    if norm == 'fwd':
+        fac = 1
+    elif norm == 'inv':
+        fac = 1/N
+    else:   
+        raise ValueError('Invalid string identifier for norm {norm}. norm is required to be (1.) fwd, (2.) inv. unitary is not available for the fct algorithm.')
+    mF = [-Fi for Fi in F]
+    G = F + [0] + mF[-1:0:-1]
+    G = [G[i]*dfth.omega(i,4*N,True) for i in range(0,2*N)]
+    g = ifft(G,norm=norm,lang=lang)
+
+    return [dfth.cround(fac*g[i],7) for i in range(0,N)]
+
+
+def fst(f: list, norm: str = 'fwd', lang: str = 'c'):
+    """
+    Computation of the 1D Fast Sine Transform of purely real data.
+    =================================================================
+
+    computation of the DST, using the fft algorithm, for efficient computation.
+    The input list is expanded according to the symmetry. 
+
+    Parameters
+    ----------
+    f: list
+        Input must be real. size of f is required to be 2**n-1.
+    norm: str
+        String identifier of the norm type. 
+        Possible options are (1.) 'fwd', (2.) 'inv'.
+        Default value is given (1.) 'fwd'
+    lang: str
+        String identifier if the language specification.
+        Possible options are (1.) 'c', (2.) 'py'.
+        Default value is given (1.) 'c' (except for recursive).
+        'c' implementation is faster than the python implementation. 
+
+    Returns
+    -------
+    F: list
+        Complex DST coefficients.
+
+    Raises
+    ------
+    IndexError:
+        If the input list has a different size than 2**n-1 or is empty.
+    ValueError:
+        If the norm string identifier is unknown.
+    ValueError:
+        If the lang string identifier is unknown.
+    """
+
+    N = len(f)+1
+    if math.log(N, 2) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+        )
+    
+    g = [0]+f+[0]+list(reversed([-fi for fi in f]))
+
+    F = ifft(g,norm=norm, lang=lang)
+
+    if norm == 'fwd':
+        fac = -1J/(2*N)
+    elif norm == 'inv':
+        fac = -1J
+    else:   
+        raise ValueError('Invalid string identifier for norm {norm}. norm is required to be (1.) fwd, (2.) inv. unitary is not available for the fct algorithm.')
+
+    return [dfth.cround(fac * F[i].imag,7) for i in range(1,N)]
+
+def ifst(F: list, norm: str = 'fwd', lang: str = 'c'):
+    """
+    Computation of the 1D inverse Fast Sine Transform of purely real data.
+    =================================================================
+
+    computation of the inverse DST, using the fft algorithm, for efficient computation.
+    The input list is expanded according to the symmetry. 
+
+    Parameters
+    ----------
+    F: list
+        Input can be complex. size of f is required to be 2**n-1.
+    norm: str
+        String identifier of the norm type. 
+        Possible options are (1.) 'fwd', (2.) 'inv'.
+        Default value is given (1.) 'fwd'
+    lang: str
+        String identifier if the language specification.
+        Possible options are (1.) 'c', (2.) 'py'.
+        Default value is given (1.) 'c' (except for recursive).
+        'c' implementation is faster than the python implementation. 
+
+    Returns
+    -------
+    f: Real list
+        Real data points of the DST coefficients.
+
+    Raises
+    ------
+    IndexError:
+        If the input list has a different size than 2**n-1 or is empty.
+    ValueError:
+        If the norm string identifier is unknown.
+    ValueError:
+        If the lang string identifier is unknown.
+    """
+
+    N = len(F)+1
+    if math.log(N, 2) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+        )
+    
+    G = [0]+F+[0]+list(reversed([-fi for fi in F]))
+
+    f = ifft(G,norm=norm, lang=lang)
+
+    if norm == 'fwd':
+        fac = 1
+    elif norm == 'inv':
+        fac = 2*N
+    else:   
+        raise ValueError('Invalid string identifier for norm {norm}. norm is required to be (1.) fwd, (2.) inv. unitary is not available for the fct algorithm.')
+    
+    return [dfth.cround(fac * f[i],7) for i in range(1,N)]
