@@ -8,8 +8,10 @@ Packages:
 ---------
 
 dft: Containig various algorithms related to the Discrete Fourier Transform. 
+hnm: Containing various algorithms for hierarchical numerical methods.
 
 '''
 from . import dft
+from . import hnm
 
-__all__ = ['dft']
+__all__ = ['dft','hnm']
