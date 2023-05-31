@@ -1,6 +1,7 @@
 import AlgScComp as asc
 import random
 import matplotlib.pyplot as plt
+import math
 
 xvec = [0,1,2,3,4,6,5,7,8,9]
 yvec = [random.random() for i in range(0,10)]
@@ -24,3 +25,12 @@ C = asc.hnm.Classifier1Dnodal(3)
 C.train(xVec,yVec)
 print(C.classify([0.5,0.7]))
 
+def f(x):
+    return math.sin(x)
+
+print(asc.hnm.quadrature1Dcomp(f,0,math.pi,1000,'trap'))
+print(asc.hnm.quadrature1Dcomp(f,0,math.pi,1000,'simp'))
+
+u = [0.4375,0.7500,0.9375,1.000,0.9375,0.7500,0.4375]
+print(asc.hnm.hierarchise1D(u))
+print(asc.hnm.dehierarchise1D(asc.hnm.hierarchise1D(u)))

@@ -10,7 +10,9 @@ plinint(xvec, yvec, x) - piecewise linear interpolation
 
 from . import hnmhelper as hnmh
 
-__all__ = ["plinint","Classifier1Dnodal"]
+import math
+
+__all__ = ["plinint","Classifier1Dnodal","quadrature1Dcomp","hierarchise1D","dehierarchise1D"]
 
 def plinint(xvec: list, yvec: list, x):
     """
@@ -157,7 +159,7 @@ class Classifier1Dnodal:
             xi = [i*h for i in range(0,self.n+2)]
 
             if type(x) == list:
-                if max(x) > self-maxv or min(x) < self.minv:
+                if max(x) > self.maxv or min(x) < self.minv:
                     raise ValueError('Given interpolation data not in the required interval used during training.')
                 xn = hnmh.normalize(x,self.minv,self.maxv)
                 return [sum([self.v[j]*hnmh.phinodal(x[i],self.n,j+1,xi) for j in range(0,self.n)]) for i in range (0,len(x))]
@@ -170,11 +172,140 @@ class Classifier1Dnodal:
             raise ValueError('Classifier not trained yet. Please train the classifier first by calling .train(...)')
 
 
+def quadrature1Dcomp(f,a: float,b: float,n: int, vers: str = 'trap') -> float:
+    '''
+    Numerical Quadrature 1D Composition Schemes
+    ===========================================
 
+    This function implements the compositional trapezoidal or simpson scheme.
 
+    Parameters:
+    -----------
+    f: function
+        Input is a function f which is defined as f(float) -> float.
+    a: float
+        Integration boundary lower bound.
+    b: float
+        Integration boundary upper bound.
+    n: int
+        Number of used intervals.
+    vers: str
+        String identifier for the computation scheme. 
 
+    Returns:
+    --------
+    integral: float
+        Numerically evaluated integral of f in integration bounds [a,b]
 
+    Raises:
+    -------
+    ValueError:
+        Unknown string identifier for vers. 
+    '''
+    integral = 0.0
+    dh = (b-a)/float(n)
 
+    if vers == 'trap':
+        for i in range(n):
+            l = a+i*dh
+            r = l+dh
+            integral += dh*(f(l)+f(r))/2
+    elif vers == 'simp':
+        for i in range(n):
+            l = a+i*dh
+            r = l+dh
+            integral += dh*(f(l)+4*f((l+r)/2)+f(r))/6
+    else:
+        raise ValueError('Unknown string identifier {str} for vers. Vers is required to be (1) trap or (2) simp.')
+
+    return integral
+
+def hierarchise1D(u: list) -> list:
+    '''
+    Hierarchical Transformation 
+    ===========================
+
+    This functions performs the transform from the nodal basis to hierarchical basis. 
+    Given a set of function values at evenly spaced points. Assuming boundray conditions u_0 = 0, u_n = 0.
+
+    Parameters:
+    -----------
+    u: list
+        list of evenly spaced function values (nodal basis). Has to have size 2**l-1
+
+    Returns:
+    --------
+    v: list
+        coefficients of hierarchical basis
+
+    Raises:
+    -------
+    ValueError:
+        If the input size of u is not as required 2**l-1
+    '''
+    N = len(u)
+    if math.log2(N+1) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n-1 and > 0"
+        )
+    maxl = int(math.log2(N+1))
+    v = list(u)
+
+    for l in range(maxl-1, 0, -1):
+        
+        delta_next = 1 << (maxl-l-1)    
+        first_this = (1<< (maxl-l)) - 1  
+        
+        for j in range(first_this, N, delta_next<<1):
+            v[j-delta_next] -= 0.5 * u[j]
+            v[j+delta_next] -= 0.5 * u[j]
+        
+    return v
+
+def dehierarchise1D(v: list) -> list:
+     '''
+    Inverse Hierarchical Transformation 
+    ===========================
+
+    This functions performs the transform from the nodal basis to hierarchical basis. 
+    Given a set of function values at evenly spaced points. Assuming boundray conditions u_0 = 0, u_n = 0.
+
+    Parameters:
+    -----------
+    v: list
+        list of hierarchical basis coefficients. Has to have size 2**l-1
+
+    Returns:
+    --------
+    u: list
+        nodal basis coefficents (evenly spaced grid points)
+
+    Raises:
+    -------
+    ValueError:
+        If the input size of v is not as required 2**l-1
+    '''
+    N = len(v)
+    if math.log2(N+1) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n-1 and > 0"
+        )
+    maxlv = int(math.log2(N+1))
+    u = list(v)
+
+    for l in range(1, int(maxlv+1)):
+        delta = 2**(maxlv - l)
+        start = delta - 1
+        for i in range(0, 2**l - 1, 2):
+            position = start + i * delta
+            assert(N > position >= 0)
+            u[position] = v[position]
+            if position - delta >= 0:
+                u[position] += 0.5 * u[position - delta]
+            if position + delta < N:
+                u[position] += 0.5 * u[position + delta]
+        
+    return u
 
 
 
