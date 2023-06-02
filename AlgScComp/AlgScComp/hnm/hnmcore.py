@@ -11,8 +11,91 @@ plinint(xvec, yvec, x) - piecewise linear interpolation
 from . import hnmhelper as hnmh
 
 import math
+import matplotlib.pyplot as plt
 
-__all__ = ["plinint","Classifier1Dnodal","quadrature1Dcomp","hierarchise1D","dehierarchise1D"]
+__all__ = ["plinint","Classifier1Dnodal","quadrature1Dcomp","hierarchise1D","dehierarchise1D","Classifier1DSparse"]
+
+class Node:
+    '''
+    Node class of the Hierarchical Sparse 1D Classifier tree.
+    Each node can contain one right and one left decedent node, which is memeber of the one lower layer. 
+    Each node has its own scalin coefficient for approximating the 
+    '''
+    def __init__(self,xpoint,level,xdata,ydata):
+        self.left = 0
+        self.right = 0
+        self.coeff = 0
+        self.xpoint = xpoint
+        self.level = level
+        self.xdata = xdata
+        self.ydata = ydata
+
+    def addNewLevel(self,ErrorThreshold,maxLvl):
+        h = 1.0/(2**self.level)
+
+        # Old scaling scheme??
+        #yscale = [y*hnmh.hatFunction(self.xpoint,h,x) for x,y in zip(self.xdata,self.ydata)]
+        #self.coeff = sum(yscale)/len(yscale)
+
+        self.coeff = sum(self.ydata)/len(self.ydata)
+
+        self.ydata = [y-self.coeff*hnmh.hatFunction(self.xpoint,h,x) for x,y in zip(self.xdata,self.ydata)]
+        
+        midpointleft = self.xpoint - h/2
+        midpointright = self.xpoint + h/2
+        inright = [x >= self.xpoint and self.xpoint < self.xpoint+h for x in self.xdata]
+        inleft = [x < self.xpoint and self.xpoint > self.xpoint-h for x in self.xdata]
+        xright = []
+        xleft = []
+        yright = []
+        yleft = []
+
+        for i in range(0,len(self.xdata)):
+            if inright[i] == 1:
+                xright.append(self.xdata[i])
+                yright.append(self.ydata[i])
+            if inleft[i] == 1:
+                xleft.append(self.xdata[i])
+                yleft.append(self.ydata[i])
+        if len(yleft) > 0:
+            if (max(yleft) > ErrorThreshold or min(yleft) < -ErrorThreshold)and self.level < maxLvl:
+                self.left = Node(midpointleft,self.level+1,xleft,yleft)
+                self.left.addNewLevel(ErrorThreshold,maxLvl)
+        if len(yright) > 0:
+            if (max(yright) > ErrorThreshold or min(yright) < -ErrorThreshold)and self.level < maxLvl:
+                self.right = Node(midpointright,self.level+1,xright,yright)
+                self.right.addNewLevel(ErrorThreshold,maxLvl)
+
+    def evaluateNodes(self,x) -> float:
+        h = 1.0/(2**self.level)
+        xhat = hnmh.hatFunction(self.xpoint,h,x)
+        yscale = self.coeff*xhat
+        if x < self.xpoint:
+            if self.left != 0:
+                return yscale + self.left.evaluateNodes(x)
+            else:
+                return yscale
+        if x > self.xpoint:
+            if self.right != 0:
+                return yscale + self.right.evaluateNodes(x)
+            else:
+                return yscale
+       
+        return yscale
+        
+    def plotBasis(self):
+        h = 1.0/(2**self.level)
+        plt.plot([self.xpoint-h,self.xpoint,self.xpoint+h],[0,self.coeff,0])
+        if self.left != 0:
+            self.left.plotBasis()
+        if self.right != 0:
+            self.right.plotBasis()
+
+'''
+Callable Functions:
+
+These functions are available from outside the module.
+'''
 
 def plinint(xvec: list, yvec: list, x):
     """
@@ -263,7 +346,7 @@ def hierarchise1D(u: list) -> list:
     return v
 
 def dehierarchise1D(v: list) -> list:
-     '''
+    '''
     Inverse Hierarchical Transformation 
     ===========================
 
@@ -307,6 +390,138 @@ def dehierarchise1D(v: list) -> list:
         
     return u
 
+class Classifier1DSparse:
+    '''
+    1D Classifier based on sparse hierarchical basis functions
+    ==========================================================
+
+    Classifier is traned on (x,y) data and can then predict y for unseen x by interpoating with the sparse hierarchical basis functions.
+    All input data x is is required to be in the interval [0,1] with boundary conditions u_0 = e_end = 0. 
+    Categorical analysis is not included and can be done in an additional postprocessing step.
+
+    Initialisation:
+    ---------------
+    The classifier is initialised generically and all spcifications are made in the training call.
+
+    Attributes:
+    -----------
+    trained: bool
+        Boolean for recogbising state of classifier. True: training dataset was applied.
+    n int:
+        Number of nodal basis fnctions used for interpolation.
+    root: Node
+        Node of the result tree from training.
+    
+    Functions:
+    ----------
+    train: 
+        Train the classifier based on example data. 
+    classify:
+        Classify unseen data.
+    '''
+    def __init__(self):
+        self.trained = False
+        self.maxv = 1
+        self.minv = 0
+    
+    def train(self,xdata: list ,ydata: list ,ErrorThreshold: float ,maxLvl : int):
+        '''
+        Train 1D Sparse Classifier
+        ==========================
+
+        This function trains the 1D Sparse Classifier based on hierarchical basis functions. 
+        A sparse hierarchical basis is developed in a recursive scheme. 
+
+        Parameters:
+        -----------
+        xdata: list
+            List of xdata. xdata has to be in the interval [0,1] (normalised)
+        ydata: list
+            List of ydata. ydata has to fulfill y(x=0)=0 and y(x=1)=0. 
+        ErrorThreshold: float
+            Absolute error threshold, which shall be sattisfied.
+        mxLvl: float
+            A maximal hierarchical basis level maxLvl>0.
+        
+        Returns:
+        --------
+        None since the tree structure with the hierarchical coefficients is stored internally in self.root (root node of the tree).
+
+        Raises:
+        -------
+        ValueError: 
+            If xdata is not normalised to interval [0,1]
+        ValueError:
+            If ydata doesn't satisfy the boundary conditions y(x=0)=0 and y(x=1)=0. 
+        ValueError:
+            If xdata and ydata have differnet number of elements or are empty
+        ValueError:
+            If maxLvl is no positive integer > 0.
+        '''
+
+        xdata = hnmh.order(xdata,ydata)
+
+        if len(xdata) == 0 or len(xdata) != len(ydata):
+            raise ValueError('Lists xdata and ydata have to be none empty lists of equal length.')
+        if max(xdata)>1 or min(xdata)<0:
+            raise ValueError('The xdata list has to be normalised in the interval [0,1]')
+        if (xdata[0] == 0 and ydata[0] != 0) or (xdata[-1] == 1 and ydata[-1] != 0):
+            raise ValueError('The boundray condition of the ydata y(x=0)=0 and y(x=1)=0 has to be satisfied.')
+        if type(maxLvl) != int or maxLvl <= 0:
+            raise ValueError('maxLvl has to be a positive intheger > 0')
+
+        self.root = Node(0.5,1,xdata,ydata)
+        self.root.addNewLevel(ErrorThreshold,maxLvl)
+        self.trained = True
+
+    def classify(self,x)->float:
+        '''
+        Classify 1D Sparse Classifier
+        =============================
+
+        This function returns the interpolated value (label) for a given input, which can then be used for subsequent classification. 
+
+        Parameters:
+        -----------
+        x: list or float 
+            xdata for classification. Has to be normalised in the inetrval [0,1]. Input data can either be a float or a list of floats
+
+        Returns:
+        --------
+        y: list or float
+            Interpolated value. Has the type of the x input data.
+
+        Raises:
+        -------
+        ValueError:
+            If x is empty or not normalised in the interval [0,1].
+        ValueError:
+            If Classifier is not trained yet.
+        '''
+        if self.trained:
+            if type(x) == list:
+                if len(x) == 0:
+                    raise ValueError('List od xdata has to be a non empty list')
+                if max(x) > 1 or min(x)<0:
+                    raise ValueError('xdata has to be nomrlaised in [0,1]')
+                return [self.root.evaluateNodes(xi) for xi in x]
+            else:
+                if x > 1 or x < 0:
+                    raise ValueError('xdata has to be nomrlaised in [0,1]')
+                return self.root.evaluateNodes(x)
+        else:
+            raise ValueError('Classififer not trained yet.')
+        
+    def plotBasis(self):
+        '''
+        Plotting Sparse Hierarchical Basis:
+        ===================================
+
+        The sparse Hierarchical basis functios are plotted.
+        '''
+        plt.figure()
+        self.root.plotBasis()
+        plt.show()
 
 
     

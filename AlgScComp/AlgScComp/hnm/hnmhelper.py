@@ -55,22 +55,26 @@ def phinodal(x: float,n: int, i: int, xvec: list) -> float:
             h = xvec[i]-xvec[i-1]
             return 1/h*(x-xvec[i-1])
         
-def order(xvec:list, yvec:list) -> (list, list):
+def order(xvec:list, yvec:list):
     '''
     Sorting input points for ascending x values. 
     '''
     x = xvec.copy()
-    y= yvec.copy() 
+    y = yvec.copy() 
     xy = sorted(zip(x, y))
     x,y = zip(*xy)
     return list(x),list(y)
     
-def normalize(vec: list, minv: float, maxv: float):
+def normalize(vec, minv: float, maxv: float):
     '''
-    Normalising the input in [0,1]
+    Normalising the input in [0.1,0.9]
+    The reason for choosing the interval is that our basis functions can only consider boundary conditions u_0 = u_end = 0
     '''
-    vec = [x-minv for x in vec]
-    vec = [x/maxv for x in vec]
+    if type(vec) == list:
+        vec = [x-minv for x in vec]
+        vec = [x/maxv*0.8+0.1 for x in vec]
+    else:
+        vec = (vec-minv)/maxv*0.8+0.1
     return vec
     
 def setuplgs(xvec: list, yvec: list, n: int):
@@ -121,3 +125,16 @@ def TDMlsgsolver(a: list,b: list,c: list,d: list):
         x[i] = (d[i]-c[i]*x[i+1])/b[i]
     
     return x
+
+def hatFunction(midpoint,h,x):
+    '''
+    Helper function for the hierarchical classifier.
+    Returning the hat function based on an interval. The most used cases are taken as the two if statements to optimise runtime. 
+    Case 3 should not be accessed during the hierarchical sparse classification. 
+    '''
+    if (x >= midpoint):
+        return (midpoint+h - x)/h
+    elif (x < midpoint):
+        return (x-(midpoint-h))/h
+    else:
+        return 0

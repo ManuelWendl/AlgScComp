@@ -68,6 +68,3 @@ print(asc.dft.ifft(asc.dft.fft(f,'fwd','v2','py'),'fwd','v2','py'))
 
 c = [[1,2,3,4,5,6],[1,2,3,4,5,6]]
 d = [1,2,3,4,5,6]
-
-print([len(x) for x in c])
-print(len(d))
