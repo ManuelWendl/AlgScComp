@@ -21,7 +21,7 @@ class Node:
     Each node can contain one right and one left decedent node, which is memeber of the one lower layer. 
     Each node has its own scalin coefficient for approximating the 
     '''
-    def __init__(self,xpoint,level,xdata,ydata):
+    def __init__(self,xpoint: float,level: int,xdata: list,ydata: list):
         self.left = 0
         self.right = 0
         self.coeff = 0
@@ -30,7 +30,26 @@ class Node:
         self.xdata = xdata
         self.ydata = ydata
 
-    def addNewLevel(self,ErrorThreshold,maxLvl):
+    def addNewLevel(self,ErrorThreshold: float,maxLvl: int):
+        '''
+        Add New Level to Hierarchical Basis:
+        ====================================
+
+        Recursive implementation for adding new hierarchical level of basis functions. 
+        Each node first determines its scaling coefficient and calculates the respective surplus. 
+        The data and the surpluses is split into the two hierarchical lower intervals left and right of the midpoint. 
+        If the maximal surplus of the split data is smaller than the ErrorThreshold we stop.
+        Otherwise a new hierarchical basis function of half the domain is introduced by a recursive call. 
+        The other termination criterion is if there exists no point to approximate in the respective split interval. 
+        The structure storing the hierarchical basis can therefore be interpreted as a tree. 
+
+        Parameters:
+        -----------
+        ErrorThreshold: float
+            Error threshold for termination of hierarchical levels
+        maxLvl: int
+            Number of maximal layers for termination criterion.
+        '''
         h = 1.0/(2**self.level)
 
         # Old scaling scheme??
@@ -66,7 +85,25 @@ class Node:
                 self.right = Node(midpointright,self.level+1,xright,yright)
                 self.right.addNewLevel(ErrorThreshold,maxLvl)
 
-    def evaluateNodes(self,x) -> float:
+    def evaluateNodes(self,x: float) -> float:
+        '''
+        Evaluation of Hierarchical basis:
+        =================================
+
+        This functions evaluates the hierarchical basis for a given point x. It is a recursive function call traversing
+        through the tree structure, which stores the hierarchical basis. At each node only the interval containing x is evaluated, such that we exploit
+        the structure of a binary search tree. 
+
+        Parameters:
+        -----------
+        x: float
+            The x parameter is a given float
+
+        Returns:
+        --------
+        y: float
+            The evaluated value at position x
+        '''
         h = 1.0/(2**self.level)
         xhat = hnmh.hatFunction(self.xpoint,h,x)
         yscale = self.coeff*xhat
@@ -84,6 +121,12 @@ class Node:
         return yscale
         
     def plotBasis(self):
+        '''
+        Plot Hierarchical Basis:
+        ========================
+
+        This function plots all basis functions contained in the tree recursively, such that a visual intuition of the basis functions can be gained. 
+        '''
         h = 1.0/(2**self.level)
         plt.plot([self.xpoint-h,self.xpoint,self.xpoint+h],[0,self.coeff,0])
         if self.left != 0:
@@ -459,7 +502,7 @@ class Classifier1DSparse:
             If maxLvl is no positive integer > 0.
         '''
 
-        xdata = hnmh.order(xdata,ydata)
+        xdata,ydata = hnmh.order(xdata,ydata)
 
         if len(xdata) == 0 or len(xdata) != len(ydata):
             raise ValueError('Lists xdata and ydata have to be none empty lists of equal length.')
@@ -512,16 +555,22 @@ class Classifier1DSparse:
         else:
             raise ValueError('Classififer not trained yet.')
         
-    def plotBasis(self):
+    def plotBasis(self, show: bool):
         '''
         Plotting Sparse Hierarchical Basis:
         ===================================
 
         The sparse Hierarchical basis functios are plotted.
+
+        Parameters:
+        -----------
+        show: bool
+            Decides if plot is shown emmidately or if additional plots can be added to the figure.
         '''
         plt.figure()
         self.root.plotBasis()
-        plt.show()
+        if show:
+            plt.show()
 
 
     

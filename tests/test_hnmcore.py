@@ -41,7 +41,7 @@ C.train(xVec,yVec,0.1,10)
 y = C.classify(0.5)
 print(y)
 
-C.plotBasis()
+C.plotBasis(False)
 
 plt.plot(xVec,yVec,'-ok')
 y = [C.classify(i/100) for i in range(0,100)]
