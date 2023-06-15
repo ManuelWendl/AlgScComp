@@ -585,7 +585,7 @@ class Classifier1DSparse:
             plt.show()
 
 
-def wavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/math.sqrt(2),-1/math.sqrt(2)], minLvl = 0, lang: str = 'c', edgeTreat: str = 'periodic') -> list:
+def wavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/math.sqrt(2),-1/math.sqrt(2)], minLvl = 0,  edgeTreat: str = 'periodic') -> list:
     '''
     1D Discrete Wavelet Transform
     =============================
@@ -602,8 +602,6 @@ def wavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/ma
         Daubechies q coefficients. Default are Haar Wavelet coefficients.
     minLvl: int
         Minimum Level of the transform. Require to be > 0. 
-    lang: str
-        String identifier for the language of the code implementation. Options (1) c and (2) py can be chosen. The default is 'c'
     edgeTreat: str
         String identifier for edge treatement. Options (1) periodic, (2) mirror and (3) zeros can be chosen. The default is 'periodic'
 
@@ -619,8 +617,6 @@ def wavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/ma
         The onput vector has to be of length 2**n
     ValueError:
         String identifier of edgeTreatment is unknown.
-    ValueError:
-        String identifier of lag is unknown. 
     '''
     if len(p)!=len(q) or len(p)<2:
         raise ValueError('scaling factors and wavelet factors have to be equally long and larger than 1 (minimum Haar Wavelets)')
@@ -634,52 +630,24 @@ def wavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/ma
         else:
             minl = minLvl
     else:
-        minl = 0
+        minl = 1
 
     c = x.copy()
 
     overhead = len(p) - 2
-    if overhead > 0:
-        if edgeTreat == 'periodic':
-            c.extend(c[0:overhead])
-        elif edgeTreat == 'mirror':
-            c.extend(c[-1:-overhead-1:-1])
-            print(c)
-        elif edgeTreat == 'zeros':
-            c.extend([0]*overhead)
-        else:
-            raise ValueError('String identifier {edgeTreat} for edgeTreat not recognised. EdgeTreat can be selected from (1) periodic, (2) mirrored, (3) zeros')
-        
-    if lang == 'py':
-        for l in range(ll-1,minl-1,-1):
-            cl,dl = [],[]
-            for j in range(0,2**l):
-                cl.append(sum([p[i]*c[2*j+i] for i in range(0,len(p))]))
-                dl.append(sum([q[i]*c[2*j+i] for i in range(0,len(q))]))
-            c[0:j+1] = cl
-            c[j+1:2*j+2] = dl
-    elif lang == 'c':
-        xc = ((ct.c_float) * len(c))(*c)
-        pc = ((ct.c_float) * len(p))(*p)
-        qc = ((ct.c_float) * len(q))(*q)
-        minLvlc = (ct.c_int)(minLvl)
-        lx = (ct.c_int)(len(c))
-        lq = (ct.c_int)(len(x))
-        hnmc.wavelet1D.restype = ct.POINTER(ct.c_float)
-
-        cc = hnmc.wavelet1D(xc,lx,pc,qc,lq,minLvlc)
-        c = [cc[i] for i in range(0,len(c))]
-
-    else:
-        raise ValueError('String identifier {lang} for lang not recognised.')
     
-    if overhead > 0:
-        c = c[0:-overhead]
+    for l in range(ll,minl-1,-1):
+            c[0:2**l] = hnmh.waveletstep(c[0:2**l],p,q,edgeTreat,overhead)
 
     return c
 
-def iwavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/math.sqrt(2),-1/math.sqrt(2)], minLvl = 0, lang: str = 'c', edgeTreat: str = 'periodic') -> list:
+def iwavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/math.sqrt(2),-1/math.sqrt(2)], minLvl = 0, edgeTreat: str = 'periodic') -> list:
     '''
+
+    ! Be Careful not completed yet
+        Only valid for Haar Wavelets not for general Daubechies!!!
+    !
+
     Inverse 1D Discrete Wavelet Transform
     =====================================
 
@@ -695,8 +663,6 @@ def iwavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/m
         Daubechies q coefficients. Default are Haar Wavelet coefficients.
     minLvl: int
         Minimum Level of the transform. Require to be > 0. 
-    lang: str
-        String identifier for the language of the code implementation. Options (1) c and (2) py can be chosen. The default is 'c'
     edgeTreat: str
         String identifier for edge treatement. Options (1) periodic, (2) mirror and (3) zeros can be chosen. The default is 'periodic'
 
@@ -712,8 +678,6 @@ def iwavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/m
         The onput vector has to be of length 2**n
     ValueError:
         String identifier of edgeTreatment is unknown.
-    ValueError:
-        String identifier of lag is unknown. 
     '''
     if len(p)!=len(q) or len(p)<2:
         raise ValueError('scaling factors and wavelet factors have to be equally long and larger than 1 (minimum Haar Wavelets)')
@@ -732,44 +696,10 @@ def iwavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/m
     c = x.copy()
 
     overhead = len(p) - 2
-    if overhead > 0:
-        if edgeTreat == 'periodic':
-            c.extend(c[0:overhead])
-        elif edgeTreat == 'mirror':
-            c.extend(c[-1:-overhead-1:-1])
-            print(c)
-        elif edgeTreat == 'zeros':
-            c.extend([0]*overhead)
-        else:
-            raise ValueError('String identifier {edgeTreat} for edgeTreat not recognised. EdgeTreat can be selected from (1) periodic, (2) mirrored, (3) zeros')
-        
-    if lang == 'py':
-        for l in range(minl,ll-1,1):
-            cc = []
-            for j in range(0,2**l):
-                cc.append(sum([p[i]*c[2*j+i] for i in range(0,len(p))]))
-                cc.append(sum([q[i]*c[2*j+i] for i in range(0,len(p))]))
-            c[0:2*j+1] = cc
-            print(cc)
-            
-            
-    elif lang == 'c':
-        xc = ((ct.c_float) * len(c))(*c)
-        pc = ((ct.c_float) * len(p))(*p)
-        qc = ((ct.c_float) * len(q))(*q)
-        minLvlc = (ct.c_int)(minLvl)
-        lx = (ct.c_int)(len(c))
-        lq = (ct.c_int)(len(x))
-        hnmc.wavelet1D.restype = ct.POINTER(ct.c_float)
-
-        cc = hnmc.wavelet1D(xc,lx,pc,qc,lq,minLvlc)
-        c = [cc[i] for i in range(0,len(c))]
-
-    else:
-        raise ValueError('String identifier {lang} for lang not recognised.')
-
-    if overhead > 0:
-        c = c[0:-overhead]
+    
+    for l in range(minl+1,ll+1):
+        print(l)
+        c[0:2**l] = hnmh.iwaveletstep(c[0:2**l],p,q,edgeTreat,overhead)
 
     return c
 

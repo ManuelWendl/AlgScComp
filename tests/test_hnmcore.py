@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import math
 
-xvec = [0,1,2,3,4,6,5,7,8,9]
+xvec = [0,1,2,3,4,5,6,7,8,9]
 yvec = [random.random() for i in range(0,10)]
 
 xint = [0, 1, 2.1, 3.8, 4.3, 5.1]
@@ -48,3 +48,18 @@ y = [C.classify(i/100) for i in range(0,100)]
 x = [i/100 for i in range(0,100)]
 plt.plot(x,y,'r')
 plt.show()
+
+
+p1 = [1/math.sqrt(2),1/math.sqrt(2)]
+q1 = [1/math.sqrt(2),-1/math.sqrt(2)]
+
+p2 = [(1+math.sqrt(3))/(4*math.sqrt(2)),(3+math.sqrt(3))/(4*math.sqrt(2)),(3-math.sqrt(3))/(4*math.sqrt(2)),(1-math.sqrt(3))/(4*math.sqrt(2))]
+q2 =  [(1+math.sqrt(3))/(4*math.sqrt(2)),-(3+math.sqrt(3))/(4*math.sqrt(2)),(3-math.sqrt(3))/(4*math.sqrt(2)),-(1-math.sqrt(3))/(4*math.sqrt(2))]
+
+s2 = [8, 4, -1, 1, 0, 4, 1, 7, -5/2, -3/2, 0, -4, -2, -2, 1, -5]
+print(asc.hnm.wavelet1D(s2,p2,q2,edgeTreat='zeros'))
+print('Inverse Test')
+a = asc.hnm.wavelet1D(s2,p2,q2,edgeTreat='zeros')
+print(a)
+b= asc.hnm.iwavelet1D(a,p2,q2,edgeTreat='zeros')
+print('b=',b)

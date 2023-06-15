@@ -138,3 +138,67 @@ def hatFunction(midpoint,h,x):
         return (x-(midpoint-h))/h
     else:
         return 0
+
+def waveletEdgeTreat(c,edgeTreat,overhead):
+    '''
+    Helper function for the wavelet transform:
+    For Daubechies wavelets grater than Haar we require boundray treatments.
+    Can be periodic, mirrored or filled with zeros.
+    '''
+    if overhead > 0:
+        if edgeTreat == 'periodic':
+            c.extend(c[0:overhead])
+        elif edgeTreat == 'mirror':
+            c.extend(c[-1:-overhead-1:-1])
+        elif edgeTreat == 'zeros':
+            c.extend([0]*overhead)
+        else:
+            raise ValueError('String identifier {edgeTreat} for edgeTreat not recognised. EdgeTreat can be selected from (1) periodic, (2) mirrored, (3) zeros')
+    return c
+
+def iwaveletEdgeTreat(c,edgeTreat,overhead):
+    '''
+    Helper function for the wavelet transform:
+    For Daubechies wavelets grater than Haar we require boundray treatments.
+    Can be periodic, mirrored or filled with zeros.
+    '''
+    if overhead > 0:
+        if edgeTreat == 'periodic':
+            c = c[-overhead:]+c
+        elif edgeTreat == 'mirror':
+            c = c[overhead:-1:-1]+c
+            print(c)
+        elif edgeTreat == 'zeros':
+            c = [0]*overhead + c
+        else:
+            raise ValueError('String identifier {edgeTreat} for edgeTreat not recognised. EdgeTreat can be selected from (1) periodic, (2) mirrored, (3) zeros')
+    return c
+        
+
+def waveletstep(c,p,q,edgeTreat,overhead):
+    '''
+    One wavelet transformation step implementation.
+    General Daubechies implementation with Daubechies coefficients p,q
+    '''
+    cCopy = waveletEdgeTreat(c.copy(),edgeTreat,overhead)
+    cc = [sum([p[i-2*j] *cCopy[i] for i in range(2*j,2*j+len(p))]) for j in range(0, int(len(c)/2))]
+    dc = [sum([q[i-2*j] *cCopy[i] for i in range(2*j,2*j+len(q))]) for j in range(0, int(len(c)/2))]
+    print(cCopy,cc,dc)
+    return cc + dc
+
+def iwaveletstep(c,p,q,edgeTreat,overhead):
+    '''
+    ! Be careful 
+        Only for Haar Wavelets correct!!
+    !
+    One inverse wavelet transformation step implementation.
+    General Daubechies implementation with Daubechies coefficients p,q
+    '''
+    ctreated = iwaveletEdgeTreat(c[:int(len(c)/2)].copy(),edgeTreat,overhead)
+    dtreated = iwaveletEdgeTreat(c[int(len(c)/2):].copy(),edgeTreat,overhead)
+    cc = []
+    for i in range(0,len(c),2):
+        cc.append(sum([p[i-2*j]*ctreated[j]+q[i-2*j]*dtreated[j] for j in range(int(i/2),int(i/2)+int(len(q)/2))]))
+        cc.append(sum([p[i+1-2*j]*ctreated[j]+q[i+1-2*j]*dtreated[j] for j in range(int(i/2),int(i/2)+int(len(q)/2))]))
+    print(ctreated,dtreated,cc)
+    return cc

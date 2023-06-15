@@ -2,7 +2,7 @@
 Discrete Fourier Transform
 ==========================
 
-Modules:
+Module:
 --------
 This module contains the following algorithms related to the Discrete Fourier Transformation:
 
