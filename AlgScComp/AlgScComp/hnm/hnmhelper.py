@@ -164,12 +164,11 @@ def iwaveletEdgeTreat(c,edgeTreat,overhead):
     '''
     if overhead > 0:
         if edgeTreat == 'periodic':
-            c = c[-overhead:]+c
+            c = c[-int(overhead/2):]+c
         elif edgeTreat == 'mirror':
-            c = c[overhead:-1:-1]+c
-            print(c)
+            c = c[-1:-int(overhead/2)-1:-1]+c
         elif edgeTreat == 'zeros':
-            c = [0]*overhead + c
+            c = [0]*int(overhead/2) + c
         else:
             raise ValueError('String identifier {edgeTreat} for edgeTreat not recognised. EdgeTreat can be selected from (1) periodic, (2) mirrored, (3) zeros')
     return c
@@ -183,7 +182,6 @@ def waveletstep(c,p,q,edgeTreat,overhead):
     cCopy = waveletEdgeTreat(c.copy(),edgeTreat,overhead)
     cc = [sum([p[i-2*j] *cCopy[i] for i in range(2*j,2*j+len(p))]) for j in range(0, int(len(c)/2))]
     dc = [sum([q[i-2*j] *cCopy[i] for i in range(2*j,2*j+len(q))]) for j in range(0, int(len(c)/2))]
-    print(cCopy,cc,dc)
     return cc + dc
 
 def iwaveletstep(c,p,q,edgeTreat,overhead):
@@ -197,8 +195,8 @@ def iwaveletstep(c,p,q,edgeTreat,overhead):
     ctreated = iwaveletEdgeTreat(c[:int(len(c)/2)].copy(),edgeTreat,overhead)
     dtreated = iwaveletEdgeTreat(c[int(len(c)/2):].copy(),edgeTreat,overhead)
     cc = []
-    for i in range(0,len(c),2):
-        cc.append(sum([p[i-2*j]*ctreated[j]+q[i-2*j]*dtreated[j] for j in range(int(i/2),int(i/2)+int(len(q)/2))]))
-        cc.append(sum([p[i+1-2*j]*ctreated[j]+q[i+1-2*j]*dtreated[j] for j in range(int(i/2),int(i/2)+int(len(q)/2))]))
-    print(ctreated,dtreated,cc)
+
+    for i in range(0,int(len(c)),2):     
+        cc.append(sum([p[j]*ctreated[int(i/2)+int((len(q)-2)/2)-int(j/2)]+q[j]*dtreated[int(i/2)+int((len(q)-2)/2)-int(j/2)] for j in range(len(q)-2,-1,-2)]))
+        cc.append(sum([p[j+1]*ctreated[int(i/2)+int((len(q)-2)/2)-int(j/2)]+q[j+1]*dtreated[int(i/2)+int((len(q)-2)/2)-int(j/2)] for j in range(len(q)-2,-1,-2)]))
     return cc

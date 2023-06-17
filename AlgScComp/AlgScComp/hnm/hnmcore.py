@@ -20,15 +20,8 @@ import matplotlib.pyplot as plt
 
 __all__ = ["plinint","Classifier1Dnodal","quadrature1Dcomp","hierarchise1D","dehierarchise1D","Classifier1DSparse","wavelet1D","iwavelet1D"]
 
-import os 
-dir_path = os.path.dirname(os.path.realpath(__file__))
 
-import ctypes as ct
-
-hnmc = ct.CDLL(dir_path+'/hnmc.so')
-hnmc.connect()
-
-class Node:
+class Node1D:
     '''
     Node class of the Hierarchical Sparse 1D Classifier tree.
     Each node can contain one right and one left decedent node, which is memeber of the one lower layer. 
@@ -90,11 +83,11 @@ class Node:
                 yleft.append(self.ydata[i])
         if len(yleft) > 0:
             if (max(yleft) > ErrorThreshold or min(yleft) < -ErrorThreshold)and self.level < maxLvl:
-                self.left = Node(midpointleft,self.level+1,xleft,yleft)
+                self.left = Node1D(midpointleft,self.level+1,xleft,yleft)
                 self.left.addNewLevel(ErrorThreshold,maxLvl)
         if len(yright) > 0:
             if (max(yright) > ErrorThreshold or min(yright) < -ErrorThreshold)and self.level < maxLvl:
-                self.right = Node(midpointright,self.level+1,xright,yright)
+                self.right = Node1D(midpointright,self.level+1,xright,yright)
                 self.right.addNewLevel(ErrorThreshold,maxLvl)
 
     def evaluateNodes(self,x: float) -> float:
@@ -525,7 +518,7 @@ class Classifier1DSparse:
         if type(maxLvl) != int or maxLvl <= 0:
             raise ValueError('maxLvl has to be a positive intheger > 0')
 
-        self.root = Node(0.5,1,xdata,ydata)
+        self.root = Node1D(0.5,1,xdata,ydata)
         self.root.addNewLevel(ErrorThreshold,maxLvl)
         self.trained = True
 
@@ -627,10 +620,12 @@ def wavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/ma
     if minLvl != 0:
         if ll < minLvl:
             print('Warning: minLvl not reached because size of data is smaller.')
+        if minLvl > int(math.log2(len(p))):
+            print('Warning: minLvl not reached because filter size too large.')
         else:
             minl = minLvl
     else:
-        minl = 1
+        minl = int(math.log2(len(p)))
 
     c = x.copy()
 
@@ -688,17 +683,18 @@ def iwavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/m
     if minLvl != 0:
         if ll < minLvl:
             print('Warning: minLvl not reached because size of data is smaller.')
+        if minLvl > int(math.log2(len(p))):
+            print('Warning: minLvl not reached because filter size too large.')
         else:
             minl = minLvl
     else:
-        minl = 0
+        minl = int(math.log2(len(p)))
 
     c = x.copy()
 
     overhead = len(p) - 2
     
-    for l in range(minl+1,ll+1):
-        print(l)
+    for l in range(minl,ll+1):
         c[0:2**l] = hnmh.iwaveletstep(c[0:2**l],p,q,edgeTreat,overhead)
 
     return c
