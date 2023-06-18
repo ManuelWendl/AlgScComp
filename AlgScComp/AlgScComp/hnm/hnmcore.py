@@ -617,6 +617,7 @@ def wavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/ma
         raise ValueError('The input vector x has to have length 2**n with n being a natural number')
 
     ll = int(math.log2(len(x)))
+    minl = int(math.log2(len(p)))
     if minLvl != 0:
         if ll < minLvl:
             print('Warning: minLvl not reached because size of data is smaller.')
@@ -624,14 +625,12 @@ def wavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/ma
             print('Warning: minLvl not reached because filter size too large.')
         else:
             minl = minLvl
-    else:
-        minl = int(math.log2(len(p)))
 
     c = x.copy()
 
     overhead = len(p) - 2
     
-    for l in range(ll,minl-1,-1):
+    for l in range(ll,minl,-1):
             c[0:2**l] = hnmh.waveletstep(c[0:2**l],p,q,edgeTreat,overhead)
 
     return c
@@ -680,6 +679,7 @@ def iwavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/m
         raise ValueError('The input vector x has to have length 2**n with n being a natural number')
 
     ll = int(math.log2(len(x)))
+    minl = int(math.log2(len(p)))
     if minLvl != 0:
         if ll < minLvl:
             print('Warning: minLvl not reached because size of data is smaller.')
@@ -687,14 +687,12 @@ def iwavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/m
             print('Warning: minLvl not reached because filter size too large.')
         else:
             minl = minLvl
-    else:
-        minl = int(math.log2(len(p)))
 
     c = x.copy()
 
     overhead = len(p) - 2
     
-    for l in range(minl,ll+1):
+    for l in range(minl+1,ll+1):
         c[0:2**l] = hnmh.iwaveletstep(c[0:2**l],p,q,edgeTreat,overhead)
 
     return c

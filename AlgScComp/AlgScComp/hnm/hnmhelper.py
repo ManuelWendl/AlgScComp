@@ -182,6 +182,7 @@ def waveletstep(c,p,q,edgeTreat,overhead):
     cCopy = waveletEdgeTreat(c.copy(),edgeTreat,overhead)
     cc = [sum([p[i-2*j] *cCopy[i] for i in range(2*j,2*j+len(p))]) for j in range(0, int(len(c)/2))]
     dc = [sum([q[i-2*j] *cCopy[i] for i in range(2*j,2*j+len(q))]) for j in range(0, int(len(c)/2))]
+    print(cCopy,cc,dc)
     return cc + dc
 
 def iwaveletstep(c,p,q,edgeTreat,overhead):
@@ -196,7 +197,8 @@ def iwaveletstep(c,p,q,edgeTreat,overhead):
     dtreated = iwaveletEdgeTreat(c[int(len(c)/2):].copy(),edgeTreat,overhead)
     cc = []
 
-    for i in range(0,int(len(c)),2):     
+    for i in range(0,int(len(c)),2): 
         cc.append(sum([p[j]*ctreated[int(i/2)+int((len(q)-2)/2)-int(j/2)]+q[j]*dtreated[int(i/2)+int((len(q)-2)/2)-int(j/2)] for j in range(len(q)-2,-1,-2)]))
         cc.append(sum([p[j+1]*ctreated[int(i/2)+int((len(q)-2)/2)-int(j/2)]+q[j+1]*dtreated[int(i/2)+int((len(q)-2)/2)-int(j/2)] for j in range(len(q)-2,-1,-2)]))
+    print(ctreated, dtreated, cc)
     return cc

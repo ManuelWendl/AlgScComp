@@ -56,11 +56,13 @@ q1 = [1/math.sqrt(2),-1/math.sqrt(2)]
 p2 = [(1+math.sqrt(3))/(4*math.sqrt(2)),(3+math.sqrt(3))/(4*math.sqrt(2)),(3-math.sqrt(3))/(4*math.sqrt(2)),(1-math.sqrt(3))/(4*math.sqrt(2))]
 q2 =  [(1-math.sqrt(3))/(4*math.sqrt(2)),-(3-math.sqrt(3))/(4*math.sqrt(2)),(3+math.sqrt(3))/(4*math.sqrt(2)),-(1+math.sqrt(3))/(4*math.sqrt(2))]
 
+print(p2,q2)
+
 s2 = [8, 4, -1, 1, 0, 4, 1, 7, -5/2, -3/2, 0, -4, -2, -2, 1, -5]
 print(asc.hnm.wavelet1D(s2,p2,q2,edgeTreat='periodic'))
 print('Inverse Test')
-a = asc.hnm.wavelet1D(s2,p2,q2,edgeTreat='zeros')
-b= asc.hnm.iwavelet1D(a,p2,q2,edgeTreat='zeros')
+a = asc.hnm.wavelet1D(s2,p2,q2,edgeTreat='zeros',minLvl=1)
+b= asc.hnm.iwavelet1D(a,p2,q2,edgeTreat='zeros',minLvl=1)
 print('b=',b)
 print('Inverse Test')
 a = asc.hnm.wavelet1D(s2,p1,q1,edgeTreat='mirror')
