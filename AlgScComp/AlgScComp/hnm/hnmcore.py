@@ -18,7 +18,7 @@ from . import hnmhelper as hnmh
 import math
 import matplotlib.pyplot as plt
 
-__all__ = ["plinint","Classifier1Dnodal","quadrature1Dcomp","hierarchise1D","dehierarchise1D","Classifier1DSparse","wavelet1D","iwavelet1D"]
+__all__ = ["plinint","Classifier1Dnodal","quadrature1Dcomp","hierarchise1D","dehierarchise1D","Classifier1DSparse","wavelet1D","iwavelet1D","wavelet2D","iwavelet2D"]
 
 
 class Node1D:
@@ -697,6 +697,169 @@ def iwavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/m
 
     return c
 
+def wavelet2D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/math.sqrt(2),-1/math.sqrt(2)], minLvl = 0,  edgeTreat: str = 'periodic') -> list:
+    '''
+    2D Discrete Wavelet Transform
+    =============================
 
+    2D Discrete Wavelet transformation for Daubechies wavelets. The daubechies coefficinets are given to the function as inputs.
+
+    Parameters: 
+    -----------
+    x: list
+        2D input signal. The length is required to be 2**n x 2**m.
+    p: list
+        Daubechies p coefficients. Default are Haar Wavelet coefficients. 
+    q: list
+        Daubechies q coefficients. Default are Haar Wavelet coefficients.
+    minLvl: int
+        Minimum Level of the transform. Require to be > 0. 
+    edgeTreat: str
+        String identifier for edge treatement. Options (1) periodic, (2) mirror and (3) zeros can be chosen. The default is 'periodic'
+
+    Returns:
+    --------
+    c: Wavelet transform of 2D input data
+
+    Raises:
+    -------
+    ValueError:
+        Scaling Daubechies coefficients have to be equally long and larger than 1 (minimum Haar Wavelets)
+    ValueError:
+        The input matrix has to be of length 2**n x 2**m
+    ValueError:
+        Corrupt matrix or different datatype given.
+    ValueError:
+        String identifier of edgeTreatment is unknown.
+    '''
+    if len(p)!=len(q) or len(p)<2:
+        raise ValueError('scaling factors and wavelet factors have to be equally long and larger than 1 (minimum Haar Wavelets)')
+    if math.log2(len(x))%1 != 0:
+        raise ValueError('The input matrix x has to have dimnensions 2**n with n being a natural number')
     
+    dim1 = len(x)
+    dim2 = len(x[0])
 
+    for i in range(0,dim1):
+        if type(x[i]) != list:
+            raise ValueError('Given input is no matrix.')
+        if math.log2(len(x[i]))%1 != 0:
+            raise ValueError('The input matrix x has to have dimnensions 2**n with n being a natural number')
+        if dim2 != len(x[i]):
+            raise ValueError('Dimensions of input matrix are inconsistent')
+        
+    dim = min(dim1,dim2)
+
+    ll = int(math.log2(dim))
+    minl = int(math.log2(len(p)))-1
+    if minLvl != 0:
+        if ll < minLvl:
+            print('Warning: minLvl not reached because size of data is smaller.')
+        if minLvl < int(math.log2(len(p))):
+            print('Warning: minLvl not reached because filter size too large.')
+        else:
+            minl = minLvl
+
+    c = x.copy()
+
+    overhead = len(p) - 2
+    
+    for l in range(ll,minl,-1):
+            cd = [hnmh.waveletstep([c[i][j] for j in range(0,2**l)],p,q,edgeTreat,overhead) for i in range(0,2**l)]
+            cdt = list(map(list, zip(*cd)))
+            ccddt = [hnmh.waveletstep([cdt[i][j] for j in range(0,2**l)],p,q,edgeTreat,overhead) for i in range(0,2**l)]
+            ccdd = list(map(list, zip(*ccddt)))
+            for i in range(2**(l-1)):
+                for j in range(2**(l-1),2**l):
+                    temp = ccdd[i][j]
+                    ccdd[i][j] = ccdd[i+2**(l-1)][j-2**(l-1)]
+                    ccdd[i+2**(l-1)][j-2**(l-1)] = temp
+            for i in range(2**l):        
+                for j in range(2**l):
+                    c[i][j] = ccdd[i][j]
+            
+    return c
+
+def iwavelet2D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/math.sqrt(2),-1/math.sqrt(2)], minLvl = 0,  edgeTreat: str = 'periodic') -> list:
+    '''
+    2D Discrete Inverse Wavelet Transform
+    =============================
+
+    2D Discrete Inverse Wavelet transformation for Daubechies wavelets. The daubechies coefficinets are given to the function as inputs.
+
+    Parameters: 
+    -----------
+    x: list
+        2D wavelet data. The length is required to be 2**n x 2**m.
+    p: list
+        Daubechies p coefficients. Default are Haar Wavelet coefficients. 
+    q: list
+        Daubechies q coefficients. Default are Haar Wavelet coefficients.
+    minLvl: int
+        Minimum Level of the transform. Require to be > 0. 
+    edgeTreat: str
+        String identifier for edge treatement. Options (1) periodic, (2) mirror and (3) zeros can be chosen. The default is 'periodic'
+
+    Returns:
+    --------
+    c: Reconstructed 2D data.
+
+    Raises:
+    -------
+    ValueError:
+        Scaling Daubechies coefficients have to be equally long and larger than 1 (minimum Haar Wavelets)
+    ValueError:
+        The input matrix has to be of length 2**n x 2**m
+    ValueError:
+        Corrupt matrix or different datatype given.
+    ValueError:
+        String identifier of edgeTreatment is unknown.
+    '''
+    if len(p)!=len(q) or len(p)<2:
+        raise ValueError('scaling factors and wavelet factors have to be equally long and larger than 1 (minimum Haar Wavelets)')
+    if math.log2(len(x))%1 != 0:
+        raise ValueError('The input matrix x has to have dimnensions 2**n with n being a natural number')
+    
+    dim1 = len(x)
+    dim2 = len(x[0])
+
+    for i in range(0,dim1):
+        if type(x[i]) != list:
+            raise ValueError('Given input is no matrix.')
+        if math.log2(len(x[i]))%1 != 0:
+            raise ValueError('The input matrix x has to have dimnensions 2**n with n being a natural number')
+        if dim2 != len(x[i]):
+            raise ValueError('Dimensions of input matrix are inconsistent')
+        
+    dim = min(dim1,dim2)
+
+    ll = int(math.log2(dim))
+    minl = int(math.log2(len(p)))-1
+    if minLvl != 0:
+        if ll < minLvl:
+            print('Warning: minLvl not reached because size of data is smaller.')
+        if minLvl < int(math.log2(len(p))):
+            print('Warning: minLvl not reached because filter size too large.')
+        else:
+            minl = minLvl
+
+    c = x.copy()
+
+    overhead = len(p) - 2
+    
+    for l in range(minl+1,ll+1):
+            ccdd = [[c[i][j] for j in range(2**l)]for i in range(2**l)]
+            for i in range(2**(l-1)):
+                for j in range(2**(l-1),2**l):
+                    temp = ccdd[i][j]
+                    ccdd[i][j] = ccdd[i+2**(l-1)][j-2**(l-1)]
+                    ccdd[i+2**(l-1)][j-2**(l-1)] = temp
+            ccddt = list(map(list, zip(*ccdd)))
+            cdt = [hnmh.iwaveletstep(ccddt[i][:] ,p,q,edgeTreat,overhead) for i in range(0,2**l)]
+            cd = list(map(list, zip(*cdt)))
+            cl = [hnmh.iwaveletstep(cd[i][:],p,q,edgeTreat,overhead) for i in range(0,2**l)]    
+            for i in range(2**l):
+                for j in range(2**l): 
+                    c[i][j] = cl[i][j]       
+                 
+    return c

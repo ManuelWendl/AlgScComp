@@ -9,10 +9,10 @@ yvec = [random.random() for i in range(0,10)]
 xint = [0, 1, 2.1, 3.8, 4.3, 5.1]
 yint = asc.hnm.plinint(xvec,yvec,xint)
 
-plt.figure()
-plt.plot(xvec,yvec)
-plt.scatter(xint,yint)
-plt.show()
+#plt.figure()
+#plt.plot(xvec,yvec)
+#plt.scatter(xint,yint)
+#plt.show()
 
 
 S = [(0,0),(0.2,1),(0.3,-1),(0.35,1),(0.4,1),(0.55,-1),(0.6,-1),(0.65,-1),(0.7,-1),(1,0)]
@@ -41,13 +41,13 @@ C.train(xVec,yVec,0.1,10)
 y = C.classify(0.5)
 print(y)
 
-C.plotBasis(False)
+#C.plotBasis(False)
 
-plt.plot(xVec,yVec,'-ok')
-y = [C.classify(i/100) for i in range(0,100)]
-x = [i/100 for i in range(0,100)]
-plt.plot(x,y,'r')
-plt.show()
+#plt.plot(xVec,yVec,'-ok')
+#y = [C.classify(i/100) for i in range(0,100)]
+#x = [i/100 for i in range(0,100)]
+#plt.plot(x,y,'r')
+#plt.show()
 
 
 p1 = [1/math.sqrt(2),1/math.sqrt(2)]
@@ -69,3 +69,31 @@ a = asc.hnm.wavelet1D(s2,p1,q1,edgeTreat='mirror')
 b= asc.hnm.iwavelet1D(a,p1,q1,edgeTreat='mirror')
 print('b=',b)
 
+a = asc.hnm.wavelet2D([[4,2,3,5],[1,-7,0,8],[-1,-3,9,-3],[6,-2,-1,1]],p1,q1)
+print(a)
+ainv =  asc.hnm.iwavelet2D(a,p1,q1)
+print(ainv)
+
+import os
+import numpy as np
+
+path = os.path.dirname(__file__)
+from skimage.io import imread
+from skimage.color import rgb2gray
+im = imread(path+"/testimagewavelet.jpg")
+im = rgb2gray(im).tolist()
+
+p1 = [1/math.sqrt(2),1/math.sqrt(2)]
+q1 = [1/math.sqrt(2),-1/math.sqrt(2)]
+
+
+waveletim = asc.hnm.wavelet2D(im,p1,q1,minLvl=8)
+plt.imshow(np.array(waveletim),cmap='gray')
+plt.show()
+
+iwaveletim = asc.hnm.iwavelet2D(waveletim,p1,q1,minLvl=8)
+plt.subplot(2,1,1)
+plt.imshow(np.array(iwaveletim),cmap='gray')
+plt.subplot(2,1,2)
+plt.imshow(np.array(im),cmap='gray')
+plt.show()
