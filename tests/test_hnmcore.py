@@ -87,11 +87,11 @@ p1 = [1/math.sqrt(2),1/math.sqrt(2)]
 q1 = [1/math.sqrt(2),-1/math.sqrt(2)]
 
 
-waveletim = asc.hnm.wavelet2D(im,p1,q1,minLvl=8)
+waveletim = asc.hnm.wavelet2D(im,p1,q1,minLvl=6)
 plt.imshow(np.array(waveletim),cmap='gray')
 plt.show()
 
-iwaveletim = asc.hnm.iwavelet2D(waveletim,p1,q1,minLvl=8)
+iwaveletim = asc.hnm.iwavelet2D(waveletim,p1,q1,minLvl=6)
 plt.subplot(2,1,1)
 plt.imshow(np.array(iwaveletim),cmap='gray')
 plt.subplot(2,1,2)
