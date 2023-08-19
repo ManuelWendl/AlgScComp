@@ -10,7 +10,10 @@ quadrature1Dcomp(f,a,b,n,vers) - Numerical quadrature with composition schemes t
 hierarchise1D(u) - Transform from nodal basis into hierarchical basis
 dehierarchise1D(v) - ransfrom for hierarchical basis into nodal basis
 Classifier1DSparse() - Classifier for 1D data based on sparse hierarchical basis function representation
-
+wavelet1D(x, p, q, minLvl, edgeTreat) - 1D Wavelet transformation 
+iwavelet1D(x, p, q, minLvl, edgeTreat) - Inverse 1D Wavelet transformation 
+wavelet2D(x, p, q, minLvl, edgeTreat) - 2D Wavelet transformation 
+iwavelet2D(x, p, q, minLvl, edgeTreat) - Inverse 2D Wavelet transformation 
 """
 
 from . import hnmhelper as hnmh
@@ -18,7 +21,7 @@ from . import hnmhelper as hnmh
 import math
 import matplotlib.pyplot as plt
 
-__all__ = ["plinint","Classifier1Dnodal","quadrature1Dcomp","hierarchise1D","dehierarchise1D","Classifier1DSparse","wavelet1D","iwavelet1D","wavelet2D","iwavelet2D"]
+__all__ = ["plinint","Classifier1Dnodal","quadrature1D","archimedis1D","hierarchise1D","dehierarchise1D","Classifier1DSparse","wavelet1D","iwavelet1D","wavelet2D","iwavelet2D"]
 
 
 class Node1D:
@@ -139,6 +142,51 @@ class Node1D:
         if self.right != 0:
             self.right.plotBasis()
 
+def archimedisRemainderDecomposition(f,a: float,b : float, epsilon, stopping):
+    '''
+    Archimedis Remainder Decomposition:
+    ===================================
+
+    This function decomposes the remainder of the archimedis quadrature in a recursive scheme. 
+
+    Parameters:
+    -----------
+    f: function
+        Input is a function f which is defined as f(float) -> float.
+    a: float
+        Interval lower bound.
+    b: float
+        Interval upper bound.
+    epsilon: float
+        Level of refinement or hierarchical surplus error bound.
+    stopping: str
+        Sting identifier for stopping criterion. Option (1) adapt, (fixed).
+
+    Returns:
+    --------
+    integral: float
+        Remainder integral
+
+    Raises:
+    -------
+    Value Error:
+        Unknown string identifier for stopping.
+
+    '''
+    D = (b-a)/2*(f((a+b)/2) - (f(a)+f(b))/2)
+    if stopping == 'adapt':
+        if D >= epsilon:
+            return D + archimedisRemainderDecomposition(f,a,(a+b)/2,epsilon,stopping) + archimedisRemainderDecomposition(f,(a+b)/2,b,epsilon,stopping)
+        else:
+            return D
+    elif stopping == 'fixed':
+        if epsilon != 0:
+            return D + archimedisRemainderDecomposition(f,a,(a+b)/2,epsilon-1,stopping) + archimedisRemainderDecomposition(f,(a+b)/2,b,epsilon-1,stopping)
+        else:
+            return D
+    else:
+        raise ValueError('Unknown string identifier {stopping} for stopping. Stopping is required to be (1) adapt or (2) fixed.')
+        
 '''
 Callable Functions:
 
@@ -188,7 +236,6 @@ def plinint(xvec: list, yvec: list, x):
             raise ValueError('Interpolation point(s) are out of bounds.')
         
         return [sum([yv[i] * hnmh.phihat(x[j],i,xv) for i in range(0,len(xv))]) for j in range(0,len(x))]
-
 
 class Classifier1Dnodal:
     '''
@@ -302,13 +349,12 @@ class Classifier1Dnodal:
         else:
             raise ValueError('Classifier not trained yet. Please train the classifier first by calling .train(...)')
 
-
-def quadrature1Dcomp(f,a: float,b: float,n: int, vers: str = 'trap') -> float:
+def quadrature1D(f,a: float,b: float,n: int, vers: str = 'trap') -> float:
     '''
-    Numerical Quadrature 1D Composition Schemes
-    ===========================================
+    Numerical Quadrature 1D Schemes
+    ===============================
 
-    This function implements the compositional trapezoidal or simpson scheme.
+    This function implements the compositional trapezoidal or simpsons quadrature. 
 
     Parameters:
     -----------
@@ -321,7 +367,7 @@ def quadrature1Dcomp(f,a: float,b: float,n: int, vers: str = 'trap') -> float:
     n: int
         Number of used intervals.
     vers: str
-        String identifier for the computation scheme. 
+        String identifier for the computation scheme. Options (1) trap, (2) simp
 
     Returns:
     --------
@@ -347,9 +393,42 @@ def quadrature1Dcomp(f,a: float,b: float,n: int, vers: str = 'trap') -> float:
             r = l+dh
             integral += dh*(f(l)+4*f((l+r)/2)+f(r))/6
     else:
-        raise ValueError('Unknown string identifier {str} for vers. Vers is required to be (1) trap or (2) simp.')
+        raise ValueError('Unknown string identifier {vers} for vers. Vers is required to be (1) trap or (2) simp.')
 
     return integral
+
+def archimedis1D(f,a: float,b: float,epsilon: float, stopping: str = 'adapt') -> float:
+    '''
+    Archimedis Quadrature 1D
+    ========================
+
+    This function implements the archimedis quadrature.
+
+    Parameters:
+    -----------
+    f: function
+        Input is a function f which is defined as f(float) -> float.
+    a: float
+        Integration boundary lower bound.
+    b: float
+        Integration boundary upper bound.
+    epsilon: float
+        Level of refinement or hierarchical surplus error bound.
+    stopping: str
+        Sting identifier for stopping criterion. Option (1) adapt, (fixed).
+
+    Returns:
+    --------
+    integral: float
+        Numerically evaluated integral of f in integration bounds [a,b]
+
+    Raises:
+    -------
+    Value Error:
+        Unknown string identifier for stopping.
+    '''
+    T1 = (b-a)/2*(f(a)+f(b))
+    return T1 + archimedisRemainderDecomposition(f,a,b,epsilon,stopping)
 
 def hierarchise1D(u: list) -> list:
     '''
@@ -576,7 +655,6 @@ class Classifier1DSparse:
         self.root.plotBasis()
         if show:
             plt.show()
-
 
 def wavelet1D(x:list, p: list = [1/math.sqrt(2),1/math.sqrt(2)], q: list = [1/math.sqrt(2),-1/math.sqrt(2)], minLvl = 0,  edgeTreat: str = 'periodic') -> list:
     '''
