@@ -14,5 +14,6 @@ hnm: Containing various algorithms for hierarchical numerical methods.
 '''
 from . import dft
 from . import hnm
+from . import sfc
 
-__all__ = ['dft','hnm']
+__all__ = ['dft','hnm','sfc']

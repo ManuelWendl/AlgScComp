@@ -8,6 +8,12 @@ The package ist structured in three main parts:
 - hnm: Hierarchical numerical methods
 - sfc: Space filling curves (currently in progress)
 
+## Contents
+The code contains a python package which can be installed via pip install 
+'python -m pip install AlgScComp'
+
+Unit tests are included in the subfolder tests. 
+
 ## Author:
 Manuel Wendl,  
 TUM (Technical University Munich),  
