@@ -17,9 +17,23 @@ def recursiveDrawSfc(currentNonTerminal,Grammar,level,currentLevel,pointArrayX,p
     if level > currentLevel:
         for i in range(0,len(currentGrammar),2):
             pointArrayX,pointArrayY = recursiveDrawSfc(currentGrammar[i],Grammar,level,currentLevel+1,pointArrayX,pointArrayY)
+            factor = 1/(math.sqrt((len(currentGrammar)+1)/2))**(level)
+            if i < len(currentGrammar)-1:
+                if currentGrammar[i+1] == 'u':
+                    pointArrayX.append(pointArrayX[-1])
+                    pointArrayY.append(pointArrayY[-1]+factor)
+                elif currentGrammar[i+1] == 'd':
+                    pointArrayX.append(pointArrayX[-1])
+                    pointArrayY.append(pointArrayY[-1]-factor)
+                elif currentGrammar[i+1] == 'l':
+                    pointArrayX.append(pointArrayX[-1]-factor)
+                    pointArrayY.append(pointArrayY[-1])
+                elif currentGrammar[i+1] == 'r':
+                    pointArrayX.append(pointArrayX[-1]+factor)
+                    pointArrayY.append(pointArrayY[-1])
         return pointArrayX,pointArrayY
     else:
-        factor = 1/(math.sqrt(len(currentGrammar)/2))**currentLevel
+        factor = 1/(math.sqrt((len(currentGrammar)+1)/2))**(level)
         for i in range(1,len(currentGrammar),2):
             if currentGrammar[i] == 'u':
                 pointArrayX.append(pointArrayX[-1])
@@ -33,9 +47,13 @@ def recursiveDrawSfc(currentNonTerminal,Grammar,level,currentLevel,pointArrayX,p
             elif currentGrammar[i] == 'r':
                 pointArrayX.append(pointArrayX[-1]+factor)
                 pointArrayY.append(pointArrayY[-1])
-
-            print(pointArrayX,pointArrayY)
         return pointArrayX,pointArrayY
+
+'''
+Callable Functions:
+
+These functions are available from outside the module.
+'''
 
 class Grammar:
     '''
@@ -91,8 +109,41 @@ def drawSfc(initialNonTerminal, Grammar, level):
     -------
     Incomplete construction grammar 
     '''
+    initGrammar = Grammar.grammar[Grammar.nonTerminals.index(initialNonTerminal)]
+    factor = 1/(math.sqrt((len(initGrammar)+1)/2))**(level)
     
-    pointArrayX, pointArrayY = recursiveDrawSfc(initialNonTerminal,Grammar,level,1,[0],[0])
+    vert = False
+    horr = False
+    i = 1
+
+    while (vert == False) or (horr == False):
+        if initGrammar[i] == 'u':
+            factorvert = factor
+            vert = True
+        elif initGrammar[i] == 'd':
+            factorvert = 1-factor
+            vert = True
+        elif initGrammar[i] == 'l':
+            factorhorr = 1-factor
+            horr = True
+        elif initGrammar[i] == 'r':
+            factorhorr = factor
+            horr = True
+        i = i+2
+
+    pointArrayX, pointArrayY = recursiveDrawSfc(initialNonTerminal,Grammar,level,1,[factorhorr],[factorvert])
     plt.figure
     plt.plot(pointArrayX,pointArrayY)
     plt.show()
+
+
+def parametriseSfc(scalingMatrices,translationVectors):
+    '''
+    parametriseSfc
+    ==============
+
+    This function returns the 2D parametrisation (0,1)x(0,1) for a 1D parameter (0,1) to
+    according to the space filling curve logic. The transforms of the given constrction grammer have to be given. 
+
+    '''
+

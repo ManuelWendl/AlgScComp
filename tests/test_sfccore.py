@@ -14,4 +14,4 @@ G = asc.sfc.Grammar(nonTerminals,terminals,grammar)
 #print(G.nonTerminals)
 #print(G.grammar)
 
-asc.sfc.drawSfc('Q',G,2)
+asc.sfc.drawSfc('S',G,4)
