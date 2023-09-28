@@ -15,3 +15,8 @@ G = asc.sfc.Grammar(nonTerminals,terminals,grammar)
 #print(G.grammar)
 
 asc.sfc.drawSfc('S',G,4)
+
+scalingMatrices = [[[0,.5],[.5,0]],[[.5,0],[0,.5]],[[.5,0],[0,.5]],[[0,-.5],[-.5,0]]]
+translationVectors = [[0,0],[0,.5],[.5,.5],[1,.5]]
+
+print(asc.sfc.parametriseSfc(1/3,scalingMatrices,translationVectors,20))
