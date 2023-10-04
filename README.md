@@ -6,11 +6,11 @@ This python package includes algorithms form the equally named module taught at 
 The package ist structured in three main parts:
 - dft: Fourier transform related transforms
 - hnm: Hierarchical numerical methods
-- sfc: Space filling curves (currently in progress)
+- sfc: Space filling curves
 
 ## Contents
 The code contains a python package which can be installed via pip install 
-'python -m pip install AlgScComp'
+'python3 -m pip install --editable AlgScComp'
 
 Unit tests are included in the subfolder tests. 
 
