@@ -1,6 +1,7 @@
 import AlgScComp as asc
 import numpy as np
 import time 
+import matplotlib.pyplot as plt
 
 testRuntime = True
 
@@ -132,3 +133,23 @@ if testRuntime == False:
 
 c = [[1,2,3,4,5,6],[1,2,3,4,5,6]]
 d = [1,2,3,4,5,6]
+
+W = asc.dft.dftMat(265)
+
+plt.figure()
+plt.imshow(np.real(np.array(W)),cmap='gray')
+plt.show()
+
+x = np.linspace(10,20,128)
+f = np.sin(2*np.pi*x) + np.sin(2*5*np.pi*x)
+
+fl = f.tolist()
+
+P,Freq = asc.dft.powerSpectrum(fl,10)
+
+plt.figure()
+plt.subplot(2,1,1)
+plt.plot(x,f)
+plt.subplot(2,1,2)
+plt.plot(np.array(Freq),np.array(P))
+plt.show()

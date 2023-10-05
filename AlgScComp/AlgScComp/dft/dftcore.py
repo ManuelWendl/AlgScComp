@@ -44,7 +44,7 @@ Numpy is based on C and using SIMD.
 import numpy as np
 
 
-__all__ = ["dft", "idft", "fft", "ifft", "rfft", "fct", "ifct", "qwfct", "iqwfct", "fst", "ifst"]
+__all__ = ["dft", "idft", "fft", "ifft", "rfft", "fct", "ifct", "qwfct", "iqwfct", "fst", "ifst","dftMat","powerSpectrum"]
 
 '''
 Helper Functions:
@@ -295,7 +295,6 @@ def dft(f: list, norm: str = 'fwd') -> list:
 
     return [dfth.cround(dfth.get_norm_fwd(N, norm)*F_i,7) for F_i in F]
 
-
 def idft(F: list, norm: str = 'fwd') -> list:
     """
     Computation of the 1D Discrete Fourier Transform.
@@ -339,7 +338,6 @@ def idft(F: list, norm: str = 'fwd') -> list:
     ]
 
     return [dfth.cround(dfth.get_norm_inv(N,norm)*f_i,7) for f_i in f]
-
 
 def fft(f: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list:
     """
@@ -517,7 +515,6 @@ def fft(f: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list:
 
     return F
 
-
 def ifft(F: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list:
     """
     Computation of the 1D inverse Fast Fourier Transform.
@@ -684,7 +681,6 @@ def ifft(F: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list
 
     return f
 
-
 def rfft(f: list, norm: str = 'fwd',lang: str = 'c') -> list:
     """
     Computation of the 1D Fast Fourier Transform of purely real data.
@@ -842,7 +838,6 @@ def fct(f: list, norm: str = 'fwd', lang: str = 'c'):
         raise ValueError('Invalid string identifier for norm {norm}. norm is required to be (1.) fwd, (2.) inv. unitary is not available for the fct algorithm.')
     return [dfth.cround(fac * F[i]) for i in range(0, len(f))]
 
-
 def ifct(F: list, norm: str = 'fwd', lang: str = 'c'):
     """
     Computation of the inverse 1D Fast Cosine Transform of purely real data.
@@ -896,7 +891,6 @@ def ifct(F: list, norm: str = 'fwd', lang: str = 'c'):
     f = ifft(G,norm=norm,lang=lang)
 
     return [dfth.cround(fac * f[i]) for i in range(0, len(F))]
-
 
 def qwfct(f: list, norm: str = 'fwd', lang: str = 'c'):
     """
@@ -952,8 +946,6 @@ def qwfct(f: list, norm: str = 'fwd', lang: str = 'c'):
 
     print([fac*dfth.cround(G[i]*dfth.omega(i,4*N,False),7) for i in range(0,2*N)])
     return [fac*dfth.cround(G[i]*dfth.omega(i,4*N,False),7) for i in range(0,N)]
-
-
     
 def iqwfct(F: list, norm: str = 'fwd', lang: str = 'c'):
     """
@@ -1010,7 +1002,6 @@ def iqwfct(F: list, norm: str = 'fwd', lang: str = 'c'):
     g = ifft(G,norm=norm,lang=lang)
 
     return [dfth.cround(fac*g[i],7) for i in range(0,N)]
-
 
 def fst(f: list, norm: str = 'fwd', lang: str = 'c'):
     """
@@ -1123,3 +1114,76 @@ def ifst(F: list, norm: str = 'fwd', lang: str = 'c'):
         raise ValueError('Invalid string identifier for norm {norm}. norm is required to be (1.) fwd, (2.) inv. unitary is not available for the fct algorithm.')
     
     return [dfth.cround(fac * f[i],7) for i in range(1,N)]
+
+def dftMat(size: int) -> list:
+    """
+    Computation of DFT Matrix
+    =========================
+
+    computation of the DFT matrix . 
+
+    Parameters
+    ----------
+    size: int
+        Size of the square DFT matrix. Typically a power of 2. 
+
+    Returns
+    -------
+    W: list
+        DFT matrix
+
+    Raises
+    ------
+    None
+    """
+
+    W = [[dfth.omega(n*k,size,False) for n in range(0,size)] for k in range(0,size)]
+    return W
+
+def powerSpectrum(f: list, dT: float) -> list:
+    """
+    Computation of the power Spectrum of a temporal signal
+    ======================================================
+
+    computation of the power spectrum of a temporal varying signal. Given the signal values and a sampling rate,
+    the power spectrum with the according frequencies is determined.  
+
+    Parameters
+    ----------
+    f: list
+        Signal values of temporal signal
+    dT: float
+        Sampling frequency in [s]    
+
+    Returns
+    -------
+    P: list
+        Power spectrum ||F||^2_2
+    Freq: list
+        Freqnecies of power spectrum in [Hz]
+
+    Raises
+    ------
+    IndexError:
+        If the input list has a different size than 2**n or is empty.
+    ValueError:
+        If the given time span is equal or less than 0.
+    """
+
+    N = len(f)
+    if math.log(N, 2) % 1 != 0 or N < 1:
+        raise ValueError(
+        "Invalid input list size. Input list size is expected to have len 2**n and > 0"
+        )
+    if dT <= 0:
+        raise ValueError(
+        "Invalid time span given. Time span has to be greater than zero"
+        )
+
+    F = fft(f)
+    P = [F[k] * dfth.conj(F[k]) for k in range(int(len(F)/2))]
+    
+    Freq = list(range(int(len(F)/2)))
+    Freq = [Freq[k]/dT for k in range(len(Freq))]
+
+    return P, Freq
