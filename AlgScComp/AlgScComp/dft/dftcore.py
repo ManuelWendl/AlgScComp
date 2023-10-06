@@ -7,7 +7,7 @@ This module contains the following algorithms:
 dft(f) - Discrete Fourier Transform
 idft(F) - Inverse Disceret Fourier Transform
 fft(f) - Fast Fourier Transform 
-ifft(F) - Ineverse Fast Fourier Transform
+ifft(F) - Inverse Fast Fourier Transform
 rfft(f) - Real Fast Fourier Transform
 fct(f) - Discrete Cosine Transform (FFT implementation)
 ifct(F) - Inverse Discrete Cosine Transform (FFT Implementation)
@@ -15,6 +15,10 @@ qwfct(f) - Quater Wave Discrete Cosine Transform (FFT implementation)
 iqwfct(F) - Inverse Quater Wave Discrete Cosine Transform (FFT implementation) 
 fst(f) - Disceret Sine Transform (FFT implementation)
 ifst(F) - Inverse Disceret Sine Transform (FFT implementation)
+dftMat(size) - DFT matrix W with complex unit roots
+powerSpectrum(f, dT) - Power spectrum of temporal signal
+fft2D(f, norm, vers, lang) - 2D Fast Fourier Transform
+ifft2D(f, norm, vers, lang) - Inverse 2D Fast Fourier Transform
 
 - dft and idft are simple implementations in form of a matrix vector multiplication of runtime O(N^2)
 - fft and ifft are divide and conquere alegorithms with different types of implemenatations.
