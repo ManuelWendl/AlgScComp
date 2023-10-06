@@ -344,6 +344,8 @@ def fft(f: list, norm: str = 'fwd', vers: str = 'vec', lang: str = 'c') -> list:
     Computation based on diffreent FFT devide and conquere schemes. 
     The Complexity of the devide and conquere schemes is given by O(N log(N)).
     Different versions can be addressed by the function parameter vers, which offers the different computation schemes. 
+    The computation time of the fft function is timed for all different c implementations (v1, v2 and vec). The elapsed 
+    time printed into the console does not contain the cpython conversions but only the runtime of the c function. 
 
     Parameters
     ----------

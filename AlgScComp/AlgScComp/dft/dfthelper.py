@@ -6,7 +6,6 @@ Helper functions of the Discrete Fourier Transform module
 
 import math
 import cmath
-import copy
 
 def get_norm_fwd(N: int, norm: str = 'fwd') -> float:
     '''
