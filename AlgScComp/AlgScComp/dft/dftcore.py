@@ -44,7 +44,7 @@ Numpy is based on C and using SIMD.
 import numpy as np
 
 
-__all__ = ["dft", "idft", "fft", "ifft", "rfft", "fct", "ifct", "qwfct", "iqwfct", "fst", "ifst","dftMat","powerSpectrum"]
+__all__ = ["dft", "idft", "fft", "ifft", "rfft", "fct", "ifct", "qwfct", "iqwfct", "fst", "ifst","dftMat","powerSpectrum","fft2D","ifft2D"]
 
 '''
 Helper Functions:
@@ -95,7 +95,6 @@ def butterfly_v2(X: list, inverse: bool) -> list:
                 X[k+j+int(L/2)] = X[k+j] - wz
                 X[k+j] = X[k+j] + wz
     return X
-
 
 def butterfly_vec(X: list, inverse: bool) -> list:
     '''
@@ -151,7 +150,6 @@ def butterfly_vec(X: list, inverse: bool) -> list:
                 X[kjStart:kjEnde] = np.add(X[kjStart:kjEnde],wz)
     return X
 
-
 def butterfly_v1(X: list, inverse: bool) -> list:
     '''
     Iterative impllementation of the butterfly scheme:
@@ -194,7 +192,6 @@ def butterfly_v1(X: list, inverse: bool) -> list:
                 X[k + j + int(L / 2)] = X[k + j] - wz
                 X[k + j] = X[k + j] + wz
     return X
-
 
 def fft_rek_recurs(X: list, inverse: bool) -> list:
     """
@@ -686,9 +683,9 @@ def rfft(f: list, norm: str = 'fwd',lang: str = 'c') -> list:
     Computation of the 1D Fast Fourier Transform of purely real data.
     =================================================================
 
-    omputation of the FFT for purely real data, based on two different schemes:
+    Computation of the FFT for purely real data, based on two different schemes:
     1. A 2N real data vector is compuetet by 2 * N complex FFTs
-    2. Twon N real valued vactors are computet simultaneously
+    2. Two N real valued vectors are computet simultaneously
 
     Parameters
     ----------
@@ -1187,3 +1184,149 @@ def powerSpectrum(f: list, dT: float) -> list:
     Freq = [Freq[k]/dT for k in range(len(Freq))]
 
     return P, Freq
+
+def fft2D(f: list, norm: str = 'fwd', vers :str = 'vec', lang :str = 'c') -> list:
+    '''
+    Computation of the 2D Fast Fourier Transform.
+    ============================================
+
+    Computation based on different FFT devide and conquere schemes. 
+    The Complexity of the devide and conquere schemes is given by O(N log(N)).
+    Different versions can be addressed by the function parameter vers, which offers the different computation schemes. 
+
+    Parameters
+    ----------
+    f: list
+        Input can be complex. size of f is required to be (2**n)x(2**m).
+    vers: str
+        String identifier of the computation scheme. 
+        Possible options are (1.) 'v1', (2.) 'vec', (3.) 'v2' and (4.) 'rec'
+        Default value is given (2.) 'vec'
+    norm: str
+        String identifier of the norm type. 
+        Possible options are (1.) 'fwd', (2.) 'inv' and (3.) 'unitary'.
+        Default value is given (1.) 'fwd'
+    lang: str
+        String identifier if the language specification.
+        Possible options are (1.) 'c', (2.) 'py'.
+        Default value is given (1.) 'c' (except for recursive).
+        'c' implementation is faster than the python implementation. 
+
+    Returns
+    -------
+    F: complex list
+        Complex Fourier coefficients.
+
+    Raises
+    ------
+    IndexError:
+        If the input list has a different size than (2**n)x(2**m) or is empty.
+    ValueError:
+        If the vers string identifier is unknown.
+    ValueError:
+        If the norm string identifier is unknown.
+    ValueError:
+        If the lang string identifier is unknown.
+        
+    Notes
+    -----
+    v1: Itterative scheme with k outer for loop and j inner for loop. Consecutive Stride 1 access to data from array (suitable for vectorisation). 
+        w is computed in innermost loop.
+
+    vec: Itterative scheme analog to v1 but in a vectorised implementation. For this function the SIMD implemenatation of numpy is used. 
+        No additional features than array addiatioan and multiplication are taken from numpy.
+    
+    v2: Itterative scheme with j outer for loop and k inner for loop. No consecutive data access (no vectorised implementation possible).
+        w is computed in the outer for loop. Complex computation is expensive and therefore compuatational advantage over v1 (but not vec).
+
+    rec: Recursive computation scheme. The recursive implementation shows good memeory usage and therefore short data access times.
+    '''
+
+    dims = dfth.checkDimensions(f)
+    FR = []
+    FC = []
+
+    for row in range(dims[0]):
+        FR.append(fft(f[row],norm,vers,lang))
+    
+    FRT = list(map(list, zip(*FR)))
+
+    for column in range(dims[1]):
+        FC.append(fft(FRT[column],norm,vers,lang))
+
+    F = list(map(list, zip(*FC)))
+
+    return F
+
+def ifft2D(F: list, norm: str = 'fwd', vers :str = 'vec', lang :str = 'c') -> list:
+    '''
+    Computation of the inverse 2D Fast Fourier Transform.
+    ============================================
+
+    Computation based on different FFT devide and conquere schemes. 
+    The Complexity of the devide and conquere schemes is given by O(N log(N)).
+    Different versions can be addressed by the function parameter vers, which offers the different computation schemes. 
+
+    Parameters
+    ----------
+    F: list
+        Complex Fourier Coefficients. Size of F is required to be (2**n)x(2**m).
+    vers: str
+        String identifier of the computation scheme. 
+        Possible options are (1.) 'v1', (2.) 'vec', (3.) 'v2' and (4.) 'rec'
+        Default value is given (2.) 'vec'
+    norm: str
+        String identifier of the norm type. 
+        Possible options are (1.) 'fwd', (2.) 'inv' and (3.) 'unitary'.
+        Default value is given (1.) 'fwd'
+    lang: str
+        String identifier if the language specification.
+        Possible options are (1.) 'c', (2.) 'py'.
+        Default value is given (1.) 'c' (except for recursive).
+        'c' implementation is faster than the python implementation. 
+
+    Returns
+    -------
+    f: complex list
+        Complex data points.
+
+    Raises
+    ------
+    IndexError:
+        If the input list has a different size than (2**n)x(2**m) or is empty.
+    ValueError:
+        If the vers string identifier is unknown.
+    ValueError:
+        If the norm string identifier is unknown.
+    ValueError:
+        If the lang string identifier is unknown.
+        
+    Notes
+    -----
+    v1: Itterative scheme with k outer for loop and j inner for loop. Consecutive Stride 1 access to data from array (suitable for vectorisation). 
+        w is computed in innermost loop.
+
+    vec: Itterative scheme analog to v1 but in a vectorised implementation. For this function the SIMD implemenatation of numpy is used. 
+        No additional features than array addiatioan and multiplication are taken from numpy.
+    
+    v2: Itterative scheme with j outer for loop and k inner for loop. No consecutive data access (no vectorised implementation possible).
+        w is computed in the outer for loop. Complex computation is expensive and therefore compuatational advantage over v1 (but not vec).
+
+    rec: Recursive computation scheme. The recursive implementation shows good memeory usage and therefore short data access times.
+    '''
+
+    dims = dfth.checkDimensions(F)
+    f = []
+    FC = []
+
+    FT = list(map(list, zip(*F)))
+
+    for column in range(dims[1]):
+        FC.append(ifft(FT[column],norm,vers,lang))
+
+    FCT = list(map(list, zip(*FC)))
+
+    for row in range(dims[0]):
+        f.append(ifft(FCT[row],norm,vers,lang))
+    
+    return f

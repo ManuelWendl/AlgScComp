@@ -94,7 +94,7 @@ def splitComplex(c: list):
 def checkDimensions(x: list) -> list:
     dim1 = len(x);
     dim2 = list();
-    dim2bool = 0; # 1 one dim, 2 tow dim
+    dim2bool = 0; # 1 one dim, 2 two dim
 
     for xi in x:
         if type(xi) != list:

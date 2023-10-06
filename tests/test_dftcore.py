@@ -2,6 +2,9 @@ import AlgScComp as asc
 import numpy as np
 import time 
 import matplotlib.pyplot as plt
+import os
+from skimage.io import imread
+from skimage.color import rgb2gray
 
 testRuntime = True
 
@@ -136,9 +139,9 @@ d = [1,2,3,4,5,6]
 
 W = asc.dft.dftMat(265)
 
-plt.figure()
-plt.imshow(np.real(np.array(W)),cmap='gray')
-plt.show()
+#plt.figure()
+#plt.imshow(np.real(np.array(W)),cmap='gray')
+#plt.show()
 
 x = np.linspace(10,20,128)
 f = np.sin(2*np.pi*x) + np.sin(2*5*np.pi*x)
@@ -147,9 +150,33 @@ fl = f.tolist()
 
 P,Freq = asc.dft.powerSpectrum(fl,10)
 
+#plt.figure()
+#plt.subplot(2,1,1)
+#plt.plot(x,f)
+#plt.subplot(2,1,2)
+#plt.plot(np.array(Freq),np.array(P))
+#plt.show()
+
+f = [[1,2,3,4,5,6,7,8],[3,4,5,6,7,8,9,10],[2,3,4,5,6,7,8,9],[4,5,6,7,8,9,10,11]]
+
+F = asc.dft.fft2D(f)
+print(F)
+print(asc.dft.ifft2D(F))
+
+
+path = os.path.dirname(__file__)
+im = imread(path+"/testimagefft2d.jpg")
+im = rgb2gray(im).tolist()
+
+Fim = asc.dft.fft2D(im)
+
+imRec = asc.dft.ifft2D(Fim)
+
 plt.figure()
-plt.subplot(2,1,1)
-plt.plot(x,f)
-plt.subplot(2,1,2)
-plt.plot(np.array(Freq),np.array(P))
+plt.subplot(1,3,1)
+plt.imshow(np.array(im),cmap='gray')
+plt.subplot(1,3,2)
+plt.imshow(np.ma.log(np.abs(np.array(Fim))))
+plt.subplot(1,3,3)
+plt.imshow(np.abs(np.array(imRec)),cmap='gray')
 plt.show()
