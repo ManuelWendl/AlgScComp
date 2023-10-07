@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from skimage.io import imread
 from skimage.color import rgb2gray
+import math
 
 testRuntime = True
 
@@ -175,8 +176,28 @@ imRec = asc.dft.ifft2D(Fim)
 plt.figure()
 plt.subplot(1,3,1)
 plt.imshow(np.array(im),cmap='gray')
+plt.axis(False)
+plt.title('Image')
 plt.subplot(1,3,2)
-plt.imshow(np.ma.log(np.abs(np.array(Fim))))
+plt.imshow(np.ma.log(np.abs(np.array(Fim))),cmap='gray')
+plt.title('Power spectrum in log-Plot')
 plt.subplot(1,3,3)
 plt.imshow(np.abs(np.array(imRec)),cmap='gray')
+plt.title('Reconstructed image from inverse operation')
+plt.show()
+
+d = [2,1,0]
+c = [1,2,1]
+
+f = [math.sin(i/10) for i in range(128)]
+dT = 100
+n = 128
+
+t,u = asc.dft.odeSolver(d,c,f,dT,n)
+
+plt.figure()
+plt.plot(np.array(t),np.array(u))
+plt.plot(np.array(t),np.array(f))
+plt.title('Special Solution to inhomogeneous ODE')
+plt.legend(['Solution u(t)','Driving force f(t)'])
 plt.show()

@@ -18,7 +18,7 @@ ifst(F) - Inverse Disceret Sine Transform (FFT implementation)
 dftMat(size) - DFT matrix W with complex unit roots
 powerSpectrum(f, dT) - Power spectrum of temporal signal
 fft2D(f, norm, vers, lang) - 2D Fast Fourier Transform
-ifft2D(f, norm, vers, lang) - Inverse 2D Fast Fourier Transform
+ifft2D(F, norm, vers, lang) - Inverse 2D Fast Fourier Transform
 
 - dft and idft are simple implementations in form of a matrix vector multiplication of runtime O(N^2)
 - fft and ifft are divide and conquere alegorithms with different types of implemenatations.
@@ -48,7 +48,7 @@ Numpy is based on C and using SIMD.
 import numpy as np
 
 
-__all__ = ["dft", "idft", "fft", "ifft", "rfft", "fct", "ifct", "qwfct", "iqwfct", "fst", "ifst","dftMat","powerSpectrum","fft2D","ifft2D"]
+__all__ = ["dft", "idft", "fft", "ifft", "rfft", "fct", "ifct", "qwfct", "iqwfct", "fst", "ifst","dftMat","powerSpectrum","fft2D","ifft2D","odeSolver"]
 
 '''
 Helper Functions:
@@ -690,7 +690,7 @@ def rfft(f: list, norm: str = 'fwd',lang: str = 'c') -> list:
     =================================================================
 
     Computation of the FFT for purely real data, based on two different schemes:
-    1. A 2N real data vector is compuetet by 2 * N complex FFTs
+    1. A 2N real data vector is compueted by 2 * N complex FFTs
     2. Two N real valued vectors are computet simultaneously
 
     Parameters
@@ -1336,3 +1336,21 @@ def ifft2D(F: list, norm: str = 'fwd', vers :str = 'vec', lang :str = 'c') -> li
         f.append(ifft(FCT[row],norm,vers,lang))
     
     return f
+
+def odeSolver(d: list, c: list, f: list, dT: float, n: int):
+    t = [0 + x*dT/n for x in range(n)]
+    kappa = [2*math.pi*j/dT for j in range(n)]
+
+    F = fft(f)
+    U = [None] * n
+
+    for i in range(n):
+        denom = 0
+        for j in range(len(d)):
+            denom += c[j]*(1J*kappa[i])**d[j] 
+        U[i] = F[i]/denom
+
+    u = ifft(U)
+
+    return t,u
+
