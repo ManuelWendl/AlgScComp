@@ -99,3 +99,10 @@ plt.imshow(np.array(iwaveletim),cmap='gray')
 plt.subplot(2,1,2)
 plt.imshow(np.array(im),cmap='gray')
 plt.show()
+
+u = [[0,0,0,0,0,0,0],[0,5,4,3,2,1,0],[0,1,2,3,4,5,0],[0,5,4,3,2,1,0],[0,1,2,3,4,5,0],[0,5,4,3,2,1,0],[0,0,0,0,0,0,0]]
+
+v = asc.hnm.hierarchise2D(u)
+print(v)
+u = asc.hnm.dehierarchise2D(v)
+print(u)

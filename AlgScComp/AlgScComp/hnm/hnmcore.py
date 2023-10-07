@@ -21,7 +21,7 @@ from . import hnmhelper as hnmh
 import math
 import matplotlib.pyplot as plt
 
-__all__ = ["plinint","Classifier1Dnodal","quadrature1D","archimedis1D","hierarchise1D","dehierarchise1D","Classifier1DSparse","wavelet1D","iwavelet1D","wavelet2D","iwavelet2D"]
+__all__ = ["plinint","Classifier1Dnodal","quadrature1D","archimedis1D","hierarchise1D","dehierarchise1D","hierarchise2D","dehierarchise2D","Classifier1DSparse","wavelet1D","iwavelet1D","wavelet2D","iwavelet2D"]
 
 
 class Node1D:
@@ -516,6 +516,72 @@ def dehierarchise1D(v: list) -> list:
                 u[position] += 0.5 * u[position + delta]
         
     return u
+
+def hierarchise2D(u: list) -> list:
+    '''
+    Hierarchical Transformation 2D
+    ==============================
+
+    This functions performs the transform from the nodal basis to hierarchical basis in two dimsensions.
+    Given a set of function values at evenly spaced grid points. Assuming boundray conditions u_0 = 0, u_n = 0 at all boundaries.
+
+    Parameters:
+    -----------
+    u: list
+        list of evenly spaced function values (nodal basis). Has to have size (2**l-1)x(2**k-1) boundary values 0 and n not included.
+
+    Returns:
+    --------
+    v: list
+        coefficients of hierarchical basis
+
+    Raises:
+    -------
+    ValueError:
+        If the input size of u is not as required (2**l-1)x(2**k-1)
+    ValueError:
+        If input matrix dimensions are not consistent. 
+    '''
+    dims = hnmh.checkDimensions(u)
+    v1 = [hierarchise1D(u[i]) for i in range(dims[0])]
+    v1T = list(map(list, zip(*v1)))
+    v2 = [hierarchise1D(v1T[i]) for i in range(dims[1])]
+    v = list(map(list, zip(*v2)))
+
+    return v
+
+def dehierarchise2D(v: list) -> list: 
+    '''
+    Inverse Hierarchical Transformation 2D
+    ======================================
+
+    This functions performs the transform from the nodal basis to hierarchical basis in 2 dimensions. 
+    Given a set of function values at evenly spaced points. Assuming boundray conditions u_0 = 0, u_n = 0.
+
+    Parameters:
+    -----------
+    v: list
+        list of hierarchical basis coefficients. Has to have size (2**l-1)x(2**k-1)
+
+    Returns:
+    --------
+    u: list
+        nodal basis coefficents (evenly spaced grid points)
+
+    Raises:
+    -------
+    ValueError:
+        If the input size of v is not as required (2**l-1)x(2**k-1)
+    ValueError: 
+        If input matrix dimensions are npt consistent. 
+    '''
+    dims = hnmh.checkDimensions(v)
+    vT = list(map(list, zip(*v)))
+    u2T = [dehierarchise1D(vT[i]) for i  in range(dims[1])]
+    u2 = list(map(list, zip(*u2T)))
+    u = [dehierarchise1D(u2[i]) for i in range(dims[0])]
+
+    return u 
 
 class Classifier1DSparse:
     '''

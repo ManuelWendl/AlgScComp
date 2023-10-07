@@ -200,3 +200,37 @@ def iwaveletstep(c,p,q,edgeTreat,overhead):
         cc.append(sum([p[j]*ctreated[int(i/2)+int((len(q)-2)/2)-int(j/2)]+q[j]*dtreated[int(i/2)+int((len(q)-2)/2)-int(j/2)] for j in range(len(q)-2,-1,-2)]))
         cc.append(sum([p[j+1]*ctreated[int(i/2)+int((len(q)-2)/2)-int(j/2)]+q[j+1]*dtreated[int(i/2)+int((len(q)-2)/2)-int(j/2)] for j in range(len(q)-2,-1,-2)]))
     return cc
+
+def checkDimensions(x: list) -> list:
+    '''
+    Checks correct dimensions of matrix u for 2D hierarchisation
+    '''
+    dim1 = len(x);
+    dim2 = list();
+    dim2bool = 0; # 1 one dim, 2 two dim
+
+    for xi in x:
+        if type(xi) != list:
+            dim2.append(0)
+            if dim2bool == 2:
+                raise ValueError("List has inconsistent sizes in second dimension.")
+            dim2bool = 1
+        elif type(xi) == list:
+            for xij in xi:
+                if type(xij) == list:
+                    raise ValueError("List has more than two dimension")
+            dim2.append(len(xi))
+            if dim2bool == 1:
+                raise ValueError("List has inconsistent sizes in second dimension.")
+            dim2bool = 2
+    
+    if sum(dim2) == 0:
+        dim1 = 1
+        dim2 = len(x)
+    else:
+        for dim2i in dim2:
+            if dim2i != dim2[0]:
+                raise ValueError("List has inconsistent sizes in second dimension.")
+        dim2 = dim2[0]
+
+    return [dim1, dim2]
