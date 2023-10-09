@@ -37,6 +37,11 @@ class Grammar:
     Incomplete construction grammar 
     '''
     def __init__(self,nonTerminals: list, terminals: list, grammar: list):
+        '''
+        Initialisation of the grammar.
+        The given grammar is checked for dimensional inconsistencies, but not for logical errors.
+        If given grammar is wrong, also provided results will be wrong. 
+        '''
         self.nonTerminals = nonTerminals
         if len(grammar) != len(nonTerminals):
             raise ValueError('Grammar not valid, number of construction grammars has to be equal to nonterminals')
@@ -53,7 +58,153 @@ class Grammar:
                             raise ValueError('Order of terminals and nonTerminals in grammar ',i,'not correct')
             self.grammar = grammar
 
+    def getParametrisation(self,initialNonterminal: str):
+        '''
+        getParametrisation
+        ==================
 
+        This function returns the scaling matrices and translation vectors of the grammar. These scaling matrices can be used for 
+        the parametrisation in 2D.
+
+        Parameters:
+        -----------
+        initialNonterminal: str
+            This is the first given nonterminal and the overall shape of the space filling curve 
+
+        Returns:
+        --------
+        scalingMatrices: list
+            Scaling matrices in the order of the provided gramar and suitable for the function parametriseSfc. 
+        translationVectors: list
+            Translation vectors in the order of the provided grammar and suitable for the function parametriseSfc.
+
+        Raises:
+        -------
+        None
+        '''
+        firstMainTerminal, secondMainTerminal = self.__getFirstTerminals(initialNonterminal)
+        gram = self.grammar[self.nonTerminals.index(initialNonterminal)]
+
+        factor = 1/math.sqrt((len(gram)+1)/2)
+
+        scalingMatrices = [None] * int((len(gram)+1)/2)
+        translationVectors = [None] * int((len(gram)+1)/2)
+
+        vertical = ['u','d']
+        horrizontal = ['l','r']
+
+        if firstMainTerminal in vertical:
+            firstMainDirection = vertical
+        else:
+            firstMainDirection = horrizontal
+
+        start = [None] * 2
+        if firstMainTerminal == 'r' or secondMainTerminal == 'r':
+            start[0] = 0
+            horrizontalsign = 1
+        else:
+            start[0] = 1
+            horrizontalsign = -1
+
+        if firstMainTerminal == 'u' or secondMainTerminal == 'u':
+            start[1] = 0
+            verticalsign = 1
+        else:
+            start[1] = 1
+            verticalsign = -1
+
+        for i in range(0,len(gram),2):
+            currentGram = self.grammar[self.nonTerminals.index(gram[i])]
+
+            translationVectors[int(i/2)] = start.copy()
+
+            for j in range(1,len(currentGram),2):
+                if currentGram[j] == 'u':
+                    start[1] += factor/(math.sqrt((len(gram)+1)/2)-1)
+                elif currentGram[j] == 'd':
+                    start[1] -= factor/(math.sqrt((len(gram)+1)/2)-1)
+                elif currentGram[j] == 'r':
+                    start[0] += factor/(math.sqrt((len(gram)+1)/2)-1)
+                elif currentGram[j] == 'l':
+                    start[0] -= factor/(math.sqrt((len(gram)+1)/2)-1)
+
+            firstTerminal, secondTerminal = self.__getFirstTerminals(gram[i])
+
+            scalingMatrix = [[0,0],[0,0]]
+
+            if firstTerminal in firstMainDirection:
+                if firstMainTerminal == firstTerminal:
+                    if firstTerminal in horrizontal:
+                        scalingMatrix[0][0] = factor*horrizontalsign
+                    else:
+                        scalingMatrix[1][1] = factor*verticalsign
+                else:
+                    if firstTerminal in horrizontal:
+                        scalingMatrix[0][0] = -factor*horrizontalsign
+                    else:
+                        scalingMatrix[1][1] = -factor*verticalsign
+                if secondMainTerminal == secondTerminal:
+                    if secondTerminal in horrizontal:
+                        scalingMatrix[0][0] = factor*horrizontalsign
+                    else:
+                        scalingMatrix[1][1] = factor*verticalsign
+                else:
+                    if secondTerminal in horrizontal:
+                        scalingMatrix[0][0] = -factor*horrizontalsign
+                    else:
+                        scalingMatrix[1][1] = -factor*verticalsign
+            else:
+                if firstMainTerminal == secondTerminal:
+                    if firstTerminal in horrizontal:
+                        scalingMatrix[0][1] = factor*horrizontalsign
+                    else:
+                        scalingMatrix[1][0] = factor*verticalsign
+                else:
+                    if firstTerminal in horrizontal:
+                        scalingMatrix[0][1] = -factor*horrizontalsign
+                    else:
+                        scalingMatrix[1][0] = -factor*verticalsign
+                if secondMainTerminal == firstTerminal:
+                    if secondTerminal in horrizontal:
+                        scalingMatrix[0][1] = factor*horrizontalsign
+                    else:
+                        scalingMatrix[1][0] = factor*verticalsign
+                else:
+                    if secondTerminal in horrizontal:
+                        scalingMatrix[0][1] = -factor*horrizontalsign
+                    else:
+                        scalingMatrix[1][0] = -factor*verticalsign
+
+            scalingMatrices[int(i/2)] = scalingMatrix
+
+        return scalingMatrices, translationVectors
+
+    def __getFirstTerminals(self,currentNonterminal):
+        '''
+        Non-callable helper function, returning the first terminal in horrizontaland vertical direction. 
+        '''
+        currentGrammar = self.grammar[self.nonTerminals.index(currentNonterminal)]
+        sideLength = math.sqrt((len(currentGrammar)+1)/2)
+
+        firstTerminal = currentGrammar[1]
+
+        vertical = ['u','d']
+        horrizontal = ['l','r']
+
+        if firstTerminal in vertical:
+            secondDirection = horrizontal
+        else:
+            secondDirection = vertical
+
+        for i in range(3,int(sideLength*2),2):
+            if currentGrammar[i] in secondDirection:
+                secondTerminal = currentGrammar[i]
+                break
+
+        return firstTerminal, secondTerminal
+
+    
+     
 def recursiveDrawSfc(currentNonTerminal: str,Grammar: Grammar,level: int,currentLevel: int,pointArrayX: list,pointArrayY: list):
     '''
     recursiveDrawSfc
@@ -243,3 +394,4 @@ def parametriseSfc(x,scalingMatrices,translationVectors,maxItterations):
         point[1] = point1
 
     return point
+
