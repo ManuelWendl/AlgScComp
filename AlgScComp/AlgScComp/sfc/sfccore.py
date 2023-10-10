@@ -64,7 +64,7 @@ class Grammar:
         ==================
 
         This function returns the scaling matrices and translation vectors of the grammar. These scaling matrices can be used for 
-        the parametrisation in 2D.
+        the parametrisation in 2D. The parametrisation is always starting at the origin (x,y) = (0,0). 
 
         Parameters:
         -----------
@@ -98,20 +98,7 @@ class Grammar:
         else:
             firstMainDirection = horrizontal
 
-        start = [None] * 2
-        if firstMainTerminal == 'r' or secondMainTerminal == 'r':
-            start[0] = 0
-            horrizontalsign = 1
-        else:
-            start[0] = 1
-            horrizontalsign = -1
-
-        if firstMainTerminal == 'u' or secondMainTerminal == 'u':
-            start[1] = 0
-            verticalsign = 1
-        else:
-            start[1] = 1
-            verticalsign = -1
+        start = [0,0]
 
         for i in range(0,len(gram),2):
             currentGram = self.grammar[self.nonTerminals.index(gram[i])]
@@ -135,45 +122,45 @@ class Grammar:
             if firstTerminal in firstMainDirection:
                 if firstMainTerminal == firstTerminal:
                     if firstTerminal in horrizontal:
-                        scalingMatrix[0][0] = factor*horrizontalsign
+                        scalingMatrix[0][0] = factor
                     else:
-                        scalingMatrix[1][1] = factor*verticalsign
+                        scalingMatrix[1][1] = factor
                 else:
                     if firstTerminal in horrizontal:
-                        scalingMatrix[0][0] = -factor*horrizontalsign
+                        scalingMatrix[0][0] = -factor
                     else:
-                        scalingMatrix[1][1] = -factor*verticalsign
+                        scalingMatrix[1][1] = -factor
                 if secondMainTerminal == secondTerminal:
                     if secondTerminal in horrizontal:
-                        scalingMatrix[0][0] = factor*horrizontalsign
+                        scalingMatrix[0][0] = factor
                     else:
-                        scalingMatrix[1][1] = factor*verticalsign
+                        scalingMatrix[1][1] = factor
                 else:
                     if secondTerminal in horrizontal:
-                        scalingMatrix[0][0] = -factor*horrizontalsign
+                        scalingMatrix[0][0] = -factor
                     else:
-                        scalingMatrix[1][1] = -factor*verticalsign
+                        scalingMatrix[1][1] = -factor
             else:
                 if firstMainTerminal == secondTerminal:
                     if firstTerminal in horrizontal:
-                        scalingMatrix[0][1] = factor*horrizontalsign
+                        scalingMatrix[0][1] = factor
                     else:
-                        scalingMatrix[1][0] = factor*verticalsign
+                        scalingMatrix[1][0] = factor
                 else:
                     if firstTerminal in horrizontal:
-                        scalingMatrix[0][1] = -factor*horrizontalsign
+                        scalingMatrix[0][1] = -factor
                     else:
-                        scalingMatrix[1][0] = -factor*verticalsign
+                        scalingMatrix[1][0] = -factor
                 if secondMainTerminal == firstTerminal:
                     if secondTerminal in horrizontal:
-                        scalingMatrix[0][1] = factor*horrizontalsign
+                        scalingMatrix[0][1] = factor
                     else:
-                        scalingMatrix[1][0] = factor*verticalsign
+                        scalingMatrix[1][0] = factor
                 else:
                     if secondTerminal in horrizontal:
-                        scalingMatrix[0][1] = -factor*horrizontalsign
+                        scalingMatrix[0][1] = -factor
                     else:
-                        scalingMatrix[1][0] = -factor*verticalsign
+                        scalingMatrix[1][0] = -factor
 
             scalingMatrices[int(i/2)] = scalingMatrix
 
