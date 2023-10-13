@@ -189,9 +189,7 @@ class Grammar:
                 break
 
         return firstTerminal, secondTerminal
-
-    
-     
+      
 def recursiveDrawSfc(currentNonTerminal: str,Grammar: Grammar,level: int,currentLevel: int,pointArrayX: list,pointArrayY: list):
     '''
     recursiveDrawSfc
@@ -321,8 +319,7 @@ def drawSfc(initialNonTerminal: str, Grammar: Grammar, level: int):
     plt.plot(pointArrayX,pointArrayY)
     plt.show()
 
-
-def parametriseSfc(x,scalingMatrices,translationVectors,maxItterations):
+def parametriseSfc(x,scalingMatrices: list, translationVectors:  list, maxItterations: int):
     '''
     parametriseSfc
     ==============
