@@ -1,6 +1,6 @@
 # AlgScComp - Algorithms of Scientific Computing
 
-This python package includes algorithms form the equally named module taught at TUM university in SS2023 by Prof. Dr. Michael Bader. 
+This python package contains algorithms from the equally named module [IN2001] taught at Technical University Munich in the summer semester 2023 by Prof. Dr. Michael Bader. 
 
 ## Structure 
 The package ist structured in three main parts:
